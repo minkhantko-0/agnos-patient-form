@@ -11,7 +11,7 @@ import {
   type PatientFormValues,
 } from "@/lib/patient/schema";
 
-import { INITIAL_CONNECTION, getRealtimeClient } from "./client";
+import { INITIAL_CONNECTION, canPush, getRealtimeClient } from "./client";
 import {
   BROADCAST_INTERVAL_MS,
   EVENT,
@@ -48,6 +48,8 @@ export function usePatientPublisher(sessionId: string) {
   const lobby = useRef<RealtimeChannel | null>(null);
 
   const sendState = useCallback(() => {
+    if (!canPush(session.current)) return;
+
     void session.current?.send({
       type: "broadcast",
       event: EVENT.state,
@@ -56,6 +58,8 @@ export function usePatientPublisher(sessionId: string) {
   }, []);
 
   const sendPresence = useCallback(() => {
+    if (!canPush(lobby.current)) return;
+
     const { values, status } = stateRef.current;
     void lobby.current?.track({
       sessionId,

@@ -1,6 +1,25 @@
-import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  createClient,
+  type RealtimeChannel,
+  type SupabaseClient,
+} from "@supabase/supabase-js";
 
 import type { ConnectionState } from "./protocol";
+
+/**
+ * Whether a channel can push over the open socket.
+ *
+ * `channel.send()` on a channel that has not finished joining does not fail —
+ * supabase-js quietly falls back to a REST POST (and warns that the fallback is
+ * being deprecated). We never want that path: it bypasses the socket for a
+ * message that is about to be superseded anyway.
+ *
+ * Skipping is safe because every broadcast carries the entire form rather than
+ * a diff, and each hook flushes again from its `SUBSCRIBED` callback — which
+ * also fires after an automatic rejoin.
+ */
+export const canPush = (channel: RealtimeChannel | null) =>
+  channel !== null && channel.state === "joined";
 
 const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
