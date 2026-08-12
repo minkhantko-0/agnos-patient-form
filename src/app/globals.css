@@ -1,26 +1,125 @@
 @import "tailwindcss";
 
+/*
+ * Tokens are declared once as plain custom properties and re-declared under
+ * `prefers-color-scheme: dark`. `@theme inline` then maps them to Tailwind
+ * utilities, so `bg-surface` resolves correctly in both schemes and almost no
+ * component needs a `dark:` variant.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  /* Tells the browser to theme native controls — the date picker especially. */
+  color-scheme: light;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --page: #f4f7f8;
+  --surface: #ffffff;
+  --surface-muted: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --ink: #0f172a;
+  --ink-muted: #64748b;
+  --ink-faint: #94a3b8;
+
+  --brand: #0f766e;
+  --brand-hover: #115e59;
+  --brand-soft: #ccfbf1;
+  --brand-ink: #ffffff;
+
+  --danger: #be123c;
+  --danger-soft: #ffe4e6;
+
+  --status-filling: #b45309;
+  --status-filling-soft: #fef3c7;
+  --status-idle: #475569;
+  --status-idle-soft: #e2e8f0;
+  --status-submitted: #047857;
+  --status-submitted-soft: #d1fae5;
+  --status-offline: #9f1239;
+  --status-offline-soft: #ffe4e6;
+
+  --highlight: #fde68a80;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+
+    --page: #060a10;
+    --surface: #0f1620;
+    --surface-muted: #131c28;
+    --border: #1e2b3a;
+    --border-strong: #2f4256;
+    --ink: #e6edf3;
+    --ink-muted: #93a4b8;
+    --ink-faint: #64748b;
+
+    --brand: #2dd4bf;
+    --brand-hover: #5eead4;
+    --brand-soft: #10312e;
+    --brand-ink: #04211f;
+
+    --danger: #fb7185;
+    --danger-soft: #3f1220;
+
+    --status-filling: #fbbf24;
+    --status-filling-soft: #3a2a08;
+    --status-idle: #94a3b8;
+    --status-idle-soft: #1e293b;
+    --status-submitted: #34d399;
+    --status-submitted-soft: #062e24;
+    --status-offline: #fb7185;
+    --status-offline-soft: #3f1220;
+
+    --highlight: #78350f66;
   }
 }
 
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+
+  --color-highlight: var(--highlight);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--page);
+  color: var(--ink);
+}
+
+/* A field the patient just edited, flashed once in the staff view. */
+@keyframes field-flash {
+  from {
+    background-color: var(--highlight);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+.field-flash {
+  animation: field-flash 1.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .field-flash {
+    animation: none;
+    outline: 2px solid var(--brand);
+    outline-offset: 2px;
+  }
 }

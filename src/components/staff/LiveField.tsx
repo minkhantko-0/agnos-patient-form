@@ -1,0 +1,41 @@
+"use client";
+
+import { FIELD_META, type PatientField } from "@/lib/patient/schema";
+
+export function LiveField({
+  field,
+  value,
+  changed,
+}: {
+  field: PatientField;
+  value: string;
+  changed: boolean;
+}) {
+  const meta = FIELD_META[field];
+  const filled = value.trim() !== "";
+
+  return (
+    <div
+      // Remounting on each change restarts the flash animation, which a plain
+      // class toggle would not do while the previous one is still running.
+      key={changed ? "on" : "off"}
+      className={`rounded-lg px-3 py-2 ${changed ? "field-flash" : ""}`}
+    >
+      <dt className="flex items-baseline gap-2 text-xs text-ink-faint">
+        {meta.label}
+        {"optional" in meta && meta.optional && (
+          <span className="text-[10px] tracking-wide uppercase">optional</span>
+        )}
+      </dt>
+      <dd
+        className={`mt-0.5 text-sm break-words ${
+          filled ? "font-medium text-ink" : "text-ink-faint italic"
+        }`}
+        // Announce the new value to a screen reader when it lands.
+        aria-live="polite"
+      >
+        {filled ? value : "—"}
+      </dd>
+    </div>
+  );
+}

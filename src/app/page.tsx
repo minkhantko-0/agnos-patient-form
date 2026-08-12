@@ -1,69 +1,78 @@
-import Image from "next/image";
+import Link from "next/link";
+
+const CARDS = [
+  {
+    href: "/form",
+    eyebrow: "For patients",
+    title: "Fill in the intake form",
+    body: "Personal details, contact information and an optional emergency contact. Validated as you go, and saved on your device if you refresh.",
+    cta: "Open the form",
+    primary: true,
+  },
+  {
+    href: "/staff",
+    eyebrow: "For staff",
+    title: "Watch sessions live",
+    body: "Every open form appears in a list with its progress and whether the patient is typing, idle or done. Open one to follow it field by field.",
+    cta: "Open the staff view",
+    primary: false,
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <div className="space-y-10">
+      <section className="max-w-2xl">
+        <p className="text-sm font-semibold tracking-wide text-brand uppercase">
+          Agnos Intake
+        </p>
+        <h1 className="mt-3 text-3xl font-semibold text-balance text-ink sm:text-4xl">
+          Patient intake that the front desk can watch as it happens
+        </h1>
+        <p className="mt-4 text-pretty text-ink-muted">
+          A patient fills in the form on their phone. Staff see each field land
+          in real time, along with whether the patient is still typing — so the
+          desk knows a form is stuck before the patient has to ask.
+        </p>
+      </section>
+
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {CARDS.map((card) => (
+          <Link
+            key={card.href}
+            href={card.href}
+            className="group flex flex-col rounded-xl border border-border bg-surface p-6 transition hover:border-brand hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
           >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+            <p className="text-xs font-semibold tracking-wide text-ink-faint uppercase">
+              {card.eyebrow}
+            </p>
+            <h2 className="mt-2 text-xl font-semibold text-ink group-hover:text-brand">
+              {card.title}
+            </h2>
+            <p className="mt-2 flex-1 text-sm text-ink-muted">{card.body}</p>
+            <span
+              className={`mt-5 inline-flex w-fit items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition ${
+                card.primary
+                  ? "bg-brand text-brand-ink group-hover:bg-brand-hover"
+                  : "border border-border-strong text-ink group-hover:bg-surface-muted"
+              }`}
+            >
+              {card.cta}
+              <span aria-hidden>→</span>
+            </span>
+          </Link>
+        ))}
+      </section>
+
+      <section className="rounded-xl border border-border bg-surface p-6">
+        <h2 className="text-base font-semibold text-ink">Trying it out</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Open the staff view in one window and the patient form in another —
+          two separate tabs each get their own session, so you can watch several
+          patients at once. Typing in the form updates the staff view within a
+          few hundred milliseconds.
+        </p>
+      </section>
     </div>
   );
 }
