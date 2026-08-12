@@ -17,11 +17,12 @@ import {
   EVENT,
   IDLE_AFTER_MS,
   LOBBY_CHANNEL,
-  PRESENCE_INTERVAL_MS,
+  SUMMARY_INTERVAL_MS,
   sessionChannel,
   type ConnectionState,
-  type LobbyPresence,
+  type LobbyIdentity,
   type PatientStatus,
+  type SessionSummary,
   type StatePayload,
 } from "./protocol";
 import { useTrailingThrottle } from "./useTrailingThrottle";
@@ -57,23 +58,26 @@ export function usePatientPublisher(sessionId: string) {
     });
   }, []);
 
-  const sendPresence = useCallback(() => {
+  const sendSummary = useCallback(() => {
     if (!canPush(lobby.current)) return;
 
     const { values, status } = stateRef.current;
-    void lobby.current?.track({
-      sessionId,
-      name: displayName(values),
-      status,
-      completed: countCompleted(values),
-      required: REQUIRED_FIELDS.length,
-      startedAt: startedAt.current,
-      updatedAt: Date.now(),
-    } satisfies LobbyPresence);
+    void lobby.current?.send({
+      type: "broadcast",
+      event: EVENT.summary,
+      payload: {
+        sessionId,
+        name: displayName(values),
+        status,
+        completed: countCompleted(values),
+        required: REQUIRED_FIELDS.length,
+        updatedAt: Date.now(),
+      } satisfies SessionSummary,
+    });
   }, [sessionId]);
 
   const state = useTrailingThrottle(BROADCAST_INTERVAL_MS, sendState);
-  const presence = useTrailingThrottle(PRESENCE_INTERVAL_MS, sendPresence);
+  const summary = useTrailingThrottle(SUMMARY_INTERVAL_MS, sendSummary);
 
   const commit = useCallback(
     (values: PatientFormValues, status: PatientStatus) => {
@@ -100,17 +104,17 @@ export function usePatientPublisher(sessionId: string) {
 
       commit(values, "filling");
       state.schedule();
-      presence.schedule();
+      summary.schedule();
 
       clearIdleTimer();
       idleTimer.current = setTimeout(() => {
         idleTimer.current = null;
         commit(stateRef.current.values, "idle");
         state.flush();
-        presence.flush();
+        summary.flush();
       }, IDLE_AFTER_MS);
     },
-    [commit, state, presence, clearIdleTimer],
+    [commit, state, summary, clearIdleTimer],
   );
 
   /** Load values without claiming the patient is active — e.g. a restored draft. */
@@ -118,9 +122,9 @@ export function usePatientPublisher(sessionId: string) {
     (values: PatientFormValues) => {
       commit(values, stateRef.current.status);
       state.schedule();
-      presence.schedule();
+      summary.schedule();
     },
-    [commit, state, presence],
+    [commit, state, summary],
   );
 
   /** Terminal state: no further updates are sent for this session. */
@@ -129,9 +133,9 @@ export function usePatientPublisher(sessionId: string) {
       clearIdleTimer();
       commit(values, "submitted");
       state.flush();
-      presence.flush();
+      summary.flush();
     },
-    [commit, state, presence, clearIdleTimer],
+    [commit, state, summary, clearIdleTimer],
   );
 
   useEffect(() => {
@@ -164,19 +168,34 @@ export function usePatientPublisher(sessionId: string) {
       config: { presence: { key: sessionId } },
     });
     lobby.current = lobbyCh;
-    lobbyCh.subscribe((status) => {
-      if (status === "SUBSCRIBED") presence.flush();
-    });
+
+    lobbyCh
+      // A staff list just opened and has no summaries yet.
+      .on("broadcast", { event: EVENT.hello }, () => summary.flush())
+      .subscribe((status) => {
+        if (status !== "SUBSCRIBED") return;
+
+        // Tracked once per join and never again: presence answers "is this tab
+        // still open", and re-tracking to publish values would make the entry
+        // blink out of the staff list. Runs again after an automatic rejoin,
+        // which is when it is genuinely needed.
+        void lobbyCh.track({
+          sessionId,
+          startedAt: startedAt.current,
+        } satisfies LobbyIdentity);
+
+        summary.flush();
+      });
 
     return () => {
       session.current = null;
       lobby.current = null;
       state.cancel();
-      presence.cancel();
+      summary.cancel();
       void supabase.removeChannel(sessionCh);
       void supabase.removeChannel(lobbyCh);
     };
-  }, [sessionId, state, presence]);
+  }, [sessionId, state, summary]);
 
   useEffect(() => clearIdleTimer, [clearIdleTimer]);
 

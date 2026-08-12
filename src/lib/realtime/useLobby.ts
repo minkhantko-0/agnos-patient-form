@@ -1,34 +1,55 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-import { INITIAL_CONNECTION, getRealtimeClient } from "./client";
+import { REQUIRED_FIELDS } from "@/lib/patient/schema";
+
+import { INITIAL_CONNECTION, canPush, getRealtimeClient } from "./client";
 import {
+  EVENT,
   LOBBY_CHANNEL,
   type ConnectionState,
-  type LobbyPresence,
+  type LobbyIdentity,
+  type LobbySession,
+  type SessionSummary,
 } from "./protocol";
 
-function isPresence(value: unknown): value is LobbyPresence {
+function isIdentity(value: unknown): value is LobbyIdentity {
   return (
     typeof value === "object" &&
     value !== null &&
-    typeof (value as LobbyPresence).sessionId === "string"
+    typeof (value as LobbyIdentity).sessionId === "string"
+  );
+}
+
+function isSummary(value: unknown): value is SessionSummary {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as SessionSummary).sessionId === "string" &&
+    typeof (value as SessionSummary).updatedAt === "number"
   );
 }
 
 /**
  * Read-only view of every patient tab currently open.
  *
- * Staff subscribe without calling `track()`, so they observe the lobby without
- * appearing in it. When a patient's socket drops, Supabase removes their
- * presence and a `leave` event fires — that is the whole disconnect story, with
- * no heartbeat or timeout logic on our side.
+ * Two signals are merged:
+ *   presence   who is here. Supabase removes a client's presence when its
+ *              socket drops, so a closed tab needs no timeout logic on our side.
+ *   summary    name, status and progress, broadcast as they change.
+ *
+ * Presence is the gate — a session is listed only while its tab is open — and
+ * the summary fills in the detail. Staff subscribe without calling `track()`,
+ * so they observe the lobby without appearing in it.
  */
 export function useLobby() {
   const [connection, setConnection] =
     useState<ConnectionState>(INITIAL_CONNECTION);
-  const [sessions, setSessions] = useState<LobbyPresence[]>([]);
+  const [present, setPresent] = useState<LobbyIdentity[]>([]);
+  const [summaries, setSummaries] = useState<Map<string, SessionSummary>>(
+    () => new Map(),
+  );
 
   useEffect(() => {
     const supabase = getRealtimeClient();
@@ -36,41 +57,81 @@ export function useLobby() {
 
     const channel = supabase.channel(LOBBY_CHANNEL);
 
-    const read = () => {
-      const byId = new Map<string, LobbyPresence>();
+    const readPresence = () => {
+      const byId = new Map<string, LobbyIdentity>();
 
-      // Presence is keyed by session id, but a reconnecting tab can leave two
-      // entries under one key for a moment — keep the freshest.
       for (const entries of Object.values(channel.presenceState())) {
         for (const entry of entries) {
-          if (!isPresence(entry)) continue;
+          if (!isIdentity(entry)) continue;
+          // Earliest join wins, so a rejoin does not reset "open for".
           const seen = byId.get(entry.sessionId);
-          if (!seen || seen.updatedAt < entry.updatedAt) {
+          if (!seen || entry.startedAt < seen.startedAt) {
             byId.set(entry.sessionId, entry);
           }
         }
       }
 
-      setSessions(
-        [...byId.values()].sort((a, b) => b.updatedAt - a.updatedAt),
-      );
+      setPresent([...byId.values()]);
     };
 
     channel
-      .on("presence", { event: "sync" }, read)
-      .on("presence", { event: "join" }, read)
-      .on("presence", { event: "leave" }, read)
+      .on("broadcast", { event: EVENT.summary }, ({ payload }) => {
+        if (!isSummary(payload)) return;
+
+        setSummaries((prev) => {
+          const seen = prev.get(payload.sessionId);
+          if (seen && seen.updatedAt >= payload.updatedAt) return prev;
+
+          return new Map(prev).set(payload.sessionId, payload);
+        });
+      })
+      // Only `sync` is read. It fires after a diff has been fully applied,
+      // whereas a `join`/`leave` handler can observe the state mid-update —
+      // including a key whose metas have been emptied but not yet removed.
+      .on("presence", { event: "sync" }, readPresence)
       .subscribe((status) => {
-        if (status === "SUBSCRIBED") setConnection("connected");
-        else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT")
+        if (status === "SUBSCRIBED") {
+          setConnection("connected");
+          // Broadcast has no history, so ask whoever is already here to
+          // re-send their summary rather than waiting for their next keystroke.
+          if (canPush(channel)) {
+            void channel.send({
+              type: "broadcast",
+              event: EVENT.hello,
+              payload: { from: "staff" },
+            });
+          }
+        } else if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
           setConnection("error");
-        else if (status === "CLOSED") setConnection("closed");
+        } else if (status === "CLOSED") {
+          setConnection("closed");
+        }
       });
 
     return () => {
       void supabase.removeChannel(channel);
     };
   }, []);
+
+  const sessions = useMemo<LobbySession[]>(() => {
+    return present
+      .map((identity) => {
+        const summary = summaries.get(identity.sessionId);
+
+        // A tab that has joined but not yet sent a summary still belongs in the
+        // list — it renders as an empty session rather than disappearing.
+        return {
+          sessionId: identity.sessionId,
+          startedAt: identity.startedAt,
+          name: summary?.name ?? "Unnamed patient",
+          status: summary?.status ?? "idle",
+          completed: summary?.completed ?? 0,
+          required: summary?.required ?? REQUIRED_FIELDS.length,
+          updatedAt: summary?.updatedAt ?? identity.startedAt,
+        };
+      })
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  }, [present, summaries]);
 
   return { connection, sessions };
 }

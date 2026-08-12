@@ -189,8 +189,11 @@ sequenceDiagram
     participant L as Staff list
     participant D as Staff detail
 
-    P->>SB: track() on `lobby` — name, status, progress
+    P->>SB: track() on `lobby` — identity, once only
     SB-->>L: presence sync → session appears in the list
+    L->>SB: broadcast `hello` on `lobby`
+    P->>SB: broadcast `summary` — name, status, progress
+    SB-->>L: card fills in
 
     D->>SB: subscribe `session:<id>`
     D->>SB: broadcast `hello`
@@ -201,7 +204,7 @@ sequenceDiagram
     loop while typing
         P->>SB: `state` (throttled to 150ms)
         SB-->>D: changed fields flash
-        P->>SB: track() (throttled to 1s)
+        P->>SB: `summary` (throttled to 1s)
         SB-->>L: card progress updates
     end
 
@@ -214,11 +217,12 @@ sequenceDiagram
     SB-->>L: presence leave → "Left the form"
 ```
 
-**`lobby` — Presence.** Every open patient tab tracks a small summary here:
-name, status, and progress. Presence rather than broadcast, because Supabase
-evicts a client's presence automatically when its socket drops — which is
-exactly the "patient closed the tab" signal the staff list needs. There is no
-heartbeat or timeout logic in this codebase.
+**`lobby` — Presence *and* broadcast, doing different jobs.** Presence answers
+"is this tab still open": each patient tracks `{ sessionId, startedAt }` exactly
+once on join and never updates it. Supabase evicts a client's presence when its
+socket drops, so a closed tab needs no heartbeat or timeout logic here. The
+things that change — name, status, progress — are broadcast as a `summary`
+instead. The staff list uses presence as the gate and the summary for detail.
 
 **`session:<id>` — Broadcast.** Carries the actual field values, so form
 contents reach only the staff member who opened that session rather than
@@ -246,6 +250,20 @@ immediately, and the last one is never the one that gets dropped. The staff list
 only shows a summary, so it does not need keystroke granularity, and the coarser
 rate keeps a room full of patients well inside Supabase's per-client event
 limit.
+
+**Presence is never used as an update channel.** This one was learned the hard
+way: an earlier version re-called `track()` once a second to publish progress,
+and cards blinked out of the staff list while patients were still typing.
+Re-tracking is an untrack-then-track, and Supabase coalesces rapid presence
+updates — so an observer sees the key leave with empty metas and only reappear
+on a later diff. Presence now carries identity only. Relatedly, the staff list
+rebuilds from `presenceState()` only on the `sync` event, because a `join` or
+`leave` handler can observe the state mid-update.
+
+**Nothing is pushed at a channel that has not joined.** `channel.send()` on a
+joining channel does not fail — supabase-js quietly falls back to a REST POST.
+Both senders check first and skip, which is safe precisely because messages
+carry full state and every hook re-flushes from its `SUBSCRIBED` callback.
 
 **Status is computed by whoever knows best.** The patient tab owns
 `filling → idle → submitted`, because only it knows when someone stopped typing.

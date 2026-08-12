@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 
-import type { LobbyPresence } from "@/lib/realtime/protocol";
+import type { LobbySession } from "@/lib/realtime/protocol";
 import { StatusPill } from "@/components/ui/StatusPill";
 import { elapsed, relativeTime } from "@/lib/time";
 
@@ -10,7 +10,7 @@ export function SessionCard({
   session,
   now,
 }: {
-  session: LobbyPresence;
+  session: LobbySession;
   now: number | null;
 }) {
   const percent = Math.round((session.completed / session.required) * 100);
