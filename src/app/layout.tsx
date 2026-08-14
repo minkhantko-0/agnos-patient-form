@@ -4,9 +4,9 @@ import { DM_Sans, Geist_Mono, Outfit } from "next/font/google";
 import { ActivityIcon } from "lucide-react";
 
 import "./globals.css";
+import { MainNav } from "@/components/MainNav";
 import { ModeToggle } from "@/components/ModeToggle";
 import { ThemeProvider } from "@/components/ThemeProvider";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const dmSans = DM_Sans({ variable: "--font-sans", subsets: ["latin"] });
@@ -58,12 +58,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
               </Link>
 
               <nav className="flex items-center gap-1">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/form">Patient form</Link>
-                </Button>
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/staff">Staff view</Link>
-                </Button>
+                <MainNav />
                 <ModeToggle />
               </nav>
             </div>
