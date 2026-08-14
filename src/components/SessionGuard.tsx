@@ -2,8 +2,9 @@
 
 import { createContext, useContext, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
+import { isCurrentView } from "@/lib/nav";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -92,12 +93,14 @@ export function GuardedLink({
   ...props
 }: React.ComponentProps<typeof Link>) {
   const { guarded, confirmLeaving } = useSessionGuard();
+  const pathname = usePathname();
 
   return (
     <Link
       href={href}
       onNavigate={(event) => {
-        if (guarded) {
+        // Clicking the tab you are already on leaves nothing to lose.
+        if (guarded && !isCurrentView(pathname, String(href))) {
           event.preventDefault();
           confirmLeaving(String(href));
           return;

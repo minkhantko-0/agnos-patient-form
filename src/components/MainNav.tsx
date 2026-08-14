@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 
 import { GuardedLink } from "@/components/SessionGuard";
 import { Button } from "@/components/ui/button";
+import { isCurrentView } from "@/lib/nav";
 
 const LINKS = [
   { href: "/form", label: "Patient form" },
@@ -16,9 +17,7 @@ export function MainNav() {
   return (
     <>
       {LINKS.map(({ href, label }) => {
-        // Session routes live under each root, so /staff/abc123 still marks
-        // the staff tab as current.
-        const current = pathname === href || pathname.startsWith(`${href}/`);
+        const current = isCurrentView(pathname, href);
 
         return (
           <Button
