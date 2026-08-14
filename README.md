@@ -4,7 +4,7 @@ A responsive patient intake form with a live staff view. A patient fills in the
 form on their phone; staff watch each field arrive in real time, along with
 whether the patient is still typing, has gone quiet, or has submitted.
 
-- **Live demo:** _(add deployed URL)_
+- **Live demo:** _(https://agnos-patient-form-nine.vercel.app)_
 - **Patient form:** `/form`
 - **Staff view:** `/staff`
 
