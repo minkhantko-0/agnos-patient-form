@@ -20,7 +20,8 @@ export default async function PatientFormPage({
         <p className="mt-1 text-sm text-muted-foreground">
           Fields marked <span className="text-destructive">*</span> are
           required. Your answers reach the front desk as you type — there is
-          nothing to save.
+          nothing to save. Keep this tab open: leaving the page takes your
+          session off their screen, though your answers stay on this device.
         </p>
       </header>
 

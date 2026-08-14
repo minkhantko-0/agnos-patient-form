@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 
+import { GuardedLink } from "@/components/SessionGuard";
 import { Button } from "@/components/ui/button";
 
 const LINKS = [
@@ -28,9 +28,12 @@ export function MainNav() {
             className={current ? undefined : "text-muted-foreground"}
             asChild
           >
-            <Link href={href} aria-current={current ? "page" : undefined}>
+            <GuardedLink
+              href={href}
+              aria-current={current ? "page" : undefined}
+            >
               {label}
-            </Link>
+            </GuardedLink>
           </Button>
         );
       })}

@@ -162,6 +162,16 @@ Specific decisions:
   `reValidateMode: "onChange"` means nobody is told their email is invalid while
   they are still typing the domain, but a correction clears the error
   immediately.
+- **A session lives exactly as long as the patient's tab.** Presence is bound to
+  that tab's socket, so closing it — or navigating away, including to the staff
+  view in the same tab — ends the session for every watcher. Nothing is lost:
+  the id is in `sessionStorage` and the answers in `localStorage`, so returning
+  to `/form` resumes both. Once the form has anything in it, header links ask
+  before navigating and offer to open the destination in a new tab instead, via
+  `Link`'s `onNavigate`. The staff list is deliberately a view of what is open
+  now rather than a queue, which is what lets the app hold no patient data
+  server-side. Persisting to a table would be the change to make if the front
+  desk needed to see forms whose patient has stepped away.
 - **Only the active status pulses.** An indicator that animates in every state
   stops carrying information.
 - **Changed fields flash once** in the staff view, ~1.4s, and the animation is

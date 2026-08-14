@@ -55,7 +55,9 @@ export function StaffDashboard() {
               </EmptyTitle>
               <EmptyDescription>
                 Sessions appear here the moment a patient opens the form, and
-                disappear when they close the tab.
+                disappear when they close the tab or navigate away. Nothing is
+                stored on a server, so this list only ever shows forms open
+                right now.
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>

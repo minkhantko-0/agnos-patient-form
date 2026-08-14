@@ -110,7 +110,7 @@ export function SessionDetail({ sessionId }: { sessionId: string }) {
               <EmptyDescription>
                 {presence
                   ? "Their tab is open. Values appear as soon as they type."
-                  : "This session is not open on any device. Form contents are held in the patient's browser, so nothing remains once they close the tab."}
+                  : "This session is not open on any device. Form contents are held in the patient's browser, so nothing remains once they close the tab or navigate away."}
               </EmptyDescription>
             </EmptyHeader>
           </Empty>

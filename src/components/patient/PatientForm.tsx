@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { TriangleAlertIcon } from "lucide-react";
 
 import { ConnectionBadge } from "@/components/ConnectionBadge";
+import { useSessionGuard } from "@/components/SessionGuard";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +31,9 @@ import { usePatientPublisher } from "@/lib/realtime/usePatientPublisher";
 import { FormField } from "./FormField";
 import { SubmittedPanel } from "./SubmittedPanel";
 
+const isFilled = (values: PatientFormValues) =>
+  Object.values(values).some((value) => value.trim() !== "");
+
 export function PatientForm({ sessionId }: { sessionId: string }) {
   const { connection, publish, seed, markSubmitted } =
     usePatientPublisher(sessionId);
@@ -37,7 +41,9 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
 
   const [submitted, setSubmitted] = useState(false);
   const [completed, setCompleted] = useState(0);
+  const [hasContent, setHasContent] = useState(false);
   const restored = useRef(false);
+  const { setGuarded } = useSessionGuard();
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -59,6 +65,7 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
 
     reset(saved.values);
     setCompleted(countCompleted(saved.values));
+    setHasContent(isFilled(saved.values));
     setSubmitted(saved.submitted);
     seed(saved.values);
   }, [draft, reset, seed]);
@@ -69,9 +76,17 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
       publish(values);
       draft.save(values);
       setCompleted(countCompleted(values));
+      setHasContent(isFilled(values));
     });
     return () => subscription.unsubscribe();
   }, [watch, publish, draft]);
+
+  // Submitted forms are guarded too: leaving takes a finished form off the
+  // front desk's screen, which is worse than losing a half-typed one.
+  useEffect(() => {
+    setGuarded(hasContent);
+    return () => setGuarded(false);
+  }, [hasContent, setGuarded]);
 
   const onSubmit = (values: PatientFormValues) => {
     markSubmitted(values);

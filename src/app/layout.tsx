@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { DM_Sans, Geist_Mono, Outfit } from "next/font/google";
 import { ActivityIcon } from "lucide-react";
 
 import "./globals.css";
 import { MainNav } from "@/components/MainNav";
 import { ModeToggle } from "@/components/ModeToggle";
+import { GuardedLink, SessionGuardProvider } from "@/components/SessionGuard";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { cn } from "@/lib/utils";
 
@@ -45,28 +45,30 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
-          <header className="border-b bg-card">
-            <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-              <Link
-                href="/"
-                className="flex items-center gap-2 font-heading font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
-              >
-                <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <ActivityIcon className="size-4" />
-                </span>
-                Agnos Intake
-              </Link>
+          <SessionGuardProvider>
+            <header className="border-b bg-card">
+              <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+                <GuardedLink
+                  href="/"
+                  className="flex items-center gap-2 font-heading font-medium outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                >
+                  <span className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <ActivityIcon className="size-4" />
+                  </span>
+                  Agnos Intake
+                </GuardedLink>
 
-              <nav className="flex items-center gap-1">
-                <MainNav />
-                <ModeToggle />
-              </nav>
-            </div>
-          </header>
+                <nav className="flex items-center gap-1">
+                  <MainNav />
+                  <ModeToggle />
+                </nav>
+              </div>
+            </header>
 
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
-            {children}
-          </main>
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 sm:py-10">
+              {children}
+            </main>
+          </SessionGuardProvider>
         </ThemeProvider>
       </body>
     </html>
