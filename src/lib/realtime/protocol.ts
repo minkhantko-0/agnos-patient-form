@@ -21,6 +21,7 @@ export type StatePayload = {
   status: PatientStatus;
   /** Broadcast is unordered; the staff side drops anything it has passed. */
   revision: number;
+  /** When the patient last changed something. 0 until they touch the form. */
   at: number;
 };
 

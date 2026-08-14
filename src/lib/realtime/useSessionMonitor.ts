@@ -122,7 +122,9 @@ export function useSessionMonitor(sessionId: string) {
     connection,
     values: snapshot?.values ?? EMPTY_PATIENT,
     status: snapshot?.status ?? null,
-    updatedAt: snapshot?.at ?? null,
+    // `at` is 0 on the payload a freshly-opened form flushes, which is "not
+    // updated", not "updated in 1970".
+    updatedAt: snapshot?.at || null,
     hasData: snapshot !== null,
     changedFields,
   };
