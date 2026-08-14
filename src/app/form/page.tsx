@@ -30,7 +30,7 @@ export default function NewSessionPage() {
   }, [router]);
 
   return (
-    <p className="py-20 text-center text-sm text-ink-muted" role="status">
+    <p className="py-20 text-center text-sm text-muted-foreground" role="status">
       Starting your session…
     </p>
   );

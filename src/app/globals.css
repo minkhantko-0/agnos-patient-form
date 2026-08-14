@@ -1,105 +1,192 @@
 @import "tailwindcss";
-
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 /*
- * Tokens are declared once as plain custom properties and re-declared under
- * `prefers-color-scheme: dark`. `@theme inline` then maps them to Tailwind
- * utilities, so `bg-surface` resolves correctly in both schemes and almost no
- * component needs a `dark:` variant.
+ ---break---
  */
+@custom-variant dark (&:is(.dark *));
+
 :root {
-  /* Tells the browser to theme native controls — the date picker especially. */
-  color-scheme: light;
-
-  --page: #f4f7f8;
-  --surface: #ffffff;
-  --surface-muted: #f8fafc;
-  --border: #e2e8f0;
-  --border-strong: #cbd5e1;
-  --ink: #0f172a;
-  --ink-muted: #64748b;
-  --ink-faint: #94a3b8;
-
-  --brand: #0f766e;
-  --brand-hover: #115e59;
-  --brand-soft: #ccfbf1;
-  --brand-ink: #ffffff;
-
-  --danger: #be123c;
-  --danger-soft: #ffe4e6;
-
-  --status-filling: #b45309;
-  --status-filling-soft: #fef3c7;
-  --status-idle: #475569;
-  --status-idle-soft: #e2e8f0;
-  --status-submitted: #047857;
-  --status-submitted-soft: #d1fae5;
-  --status-offline: #9f1239;
-  --status-offline-soft: #ffe4e6;
-
-  --highlight: #fde68a80;
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.148 0.004 228.8);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.148 0.004 228.8);
+  --primary: oklch(0.488 0.243 264.376);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.967 0.001 286.375);
+  --secondary-foreground: oklch(0.21 0.006 285.885);
+  --muted: oklch(0.963 0.002 197.1);
+  --muted-foreground: oklch(0.56 0.021 213.5);
+  --accent: oklch(0.963 0.002 197.1);
+  --accent-foreground: oklch(0.218 0.008 223.9);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.723 0.014 214.4);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --radius: 0.875rem;
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-primary: oklch(0.546 0.245 262.881);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.723 0.014 214.4);
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.148 0.004 228.8);
 }
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    color-scheme: dark;
-
-    --page: #060a10;
-    --surface: #0f1620;
-    --surface-muted: #131c28;
-    --border: #1e2b3a;
-    --border-strong: #2f4256;
-    --ink: #e6edf3;
-    --ink-muted: #93a4b8;
-    --ink-faint: #64748b;
-
-    --brand: #2dd4bf;
-    --brand-hover: #5eead4;
-    --brand-soft: #10312e;
-    --brand-ink: #04211f;
-
-    --danger: #fb7185;
-    --danger-soft: #3f1220;
-
-    --status-filling: #fbbf24;
-    --status-filling-soft: #3a2a08;
-    --status-idle: #94a3b8;
-    --status-idle-soft: #1e293b;
-    --status-submitted: #34d399;
-    --status-submitted-soft: #062e24;
-    --status-offline: #fb7185;
-    --status-offline-soft: #3f1220;
-
-    --highlight: #78350f66;
+/*
+ ---break---
+ */
+.dark {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.424 0.199 265.638);
+  --primary-foreground: oklch(0.97 0.014 254.604);
+  --secondary: oklch(0.274 0.006 286.033);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.623 0.214 259.815);
+  --sidebar-primary-foreground: oklch(0.97 0.014 254.604);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+}
+/*
+ ---break---
+ */
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-geist-mono);
+  --font-heading: var(--font-heading);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+/*
+ ---break---
+ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
   }
 }
 
-@theme inline {
-  --color-page: var(--page);
-  --color-surface: var(--surface);
-  --color-surface-muted: var(--surface-muted);
-  --color-border: var(--border);
-  --color-border-strong: var(--border-strong);
-  --color-ink: var(--ink);
-  --color-ink-muted: var(--ink-muted);
-  --color-ink-faint: var(--ink-faint);
+/* ------------------------------------------------------------------------ *
+ * Application tokens
+ *
+ * Everything above this line is generated by `shadcn init/apply` and should be
+ * left for the CLI to rewrite. Below is what the preset has no opinion about:
+ * the four session states, which need a colour each in both schemes.
+ * ------------------------------------------------------------------------ */
 
-  --color-brand: var(--brand);
-  --color-brand-hover: var(--brand-hover);
-  --color-brand-soft: var(--brand-soft);
-  --color-brand-ink: var(--brand-ink);
+:root {
+  /* Themes native controls — the date picker especially. */
+  color-scheme: light;
 
-  --color-danger: var(--danger);
-  --color-danger-soft: var(--danger-soft);
+  --status-filling: oklch(0.55 0.13 71);
+  --status-filling-soft: oklch(0.96 0.045 85);
+  --status-idle: oklch(0.5 0.02 213.5);
+  --status-idle-soft: oklch(0.94 0.004 213.5);
+  --status-submitted: oklch(0.52 0.12 158);
+  --status-submitted-soft: oklch(0.95 0.045 158);
+  --status-offline: oklch(0.55 0.19 20);
+  --status-offline-soft: oklch(0.95 0.035 20);
 
-  --color-highlight: var(--highlight);
-
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Translucent so the flash reads over whatever sits underneath it. */
+  --highlight: oklch(0.85 0.13 85 / 45%);
 }
 
-body {
-  background: var(--page);
-  color: var(--ink);
+.dark {
+  color-scheme: dark;
+
+  --status-filling: oklch(0.82 0.14 80);
+  --status-filling-soft: oklch(0.32 0.06 75);
+  --status-idle: oklch(0.72 0.014 214.4);
+  --status-idle-soft: oklch(0.3 0.011 216.9);
+  --status-submitted: oklch(0.8 0.14 160);
+  --status-submitted-soft: oklch(0.31 0.06 160);
+  --status-offline: oklch(0.72 0.15 20);
+  --status-offline-soft: oklch(0.32 0.08 18);
+
+  --highlight: oklch(0.55 0.11 75 / 35%);
+}
+
+@theme inline {
+  --color-status-filling: var(--status-filling);
+  --color-status-filling-soft: var(--status-filling-soft);
+  --color-status-idle: var(--status-idle);
+  --color-status-idle-soft: var(--status-idle-soft);
+  --color-status-submitted: var(--status-submitted);
+  --color-status-submitted-soft: var(--status-submitted-soft);
+  --color-status-offline: var(--status-offline);
+  --color-status-offline-soft: var(--status-offline-soft);
+  --color-highlight: var(--highlight);
 }
 
 /* A field the patient just edited, flashed once in the staff view. */
@@ -119,7 +206,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .field-flash {
     animation: none;
-    outline: 2px solid var(--brand);
+    outline: 2px solid var(--ring);
     outline-offset: 2px;
   }
 }

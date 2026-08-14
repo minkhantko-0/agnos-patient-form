@@ -3,7 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { TriangleAlertIcon } from "lucide-react";
 
+import { ConnectionBadge } from "@/components/ConnectionBadge";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  FieldDescription,
+  FieldGroup,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Progress } from "@/components/ui/progress";
 import {
   EMPTY_PATIENT,
   FIELD_SECTIONS,
@@ -14,7 +26,6 @@ import {
 } from "@/lib/patient/schema";
 import { useDraft } from "@/lib/patient/useDraft";
 import { usePatientPublisher } from "@/lib/realtime/usePatientPublisher";
-import { ConnectionBadge } from "@/components/ui/ConnectionBadge";
 
 import { FormField } from "./FormField";
 import { SubmittedPanel } from "./SubmittedPanel";
@@ -37,7 +48,8 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
     reValidateMode: "onChange",
   });
 
-  const { register, handleSubmit, formState, watch, reset, getValues } = form;
+  const { register, control, handleSubmit, formState, watch, reset, getValues } =
+    form;
 
   // Restore a draft from this device before wiring up the outbound feed, so the
   // first thing staff receive is the recovered form rather than a blank one.
@@ -89,69 +101,61 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
-      <div className="sticky top-0 z-10 -mx-4 border-b border-border bg-page/85 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-xl sm:border sm:px-5">
+      <div className="sticky top-0 z-10 -mx-4 space-y-2 border-b bg-background/85 px-4 py-3 backdrop-blur sm:mx-0 sm:rounded-2xl sm:border sm:px-5">
         <div className="flex items-center justify-between gap-3">
-          <p className="text-sm font-medium text-ink">
+          <p className="text-sm font-medium">
             {completed} of {total} required fields
           </p>
           <ConnectionBadge state={connection} />
         </div>
-        <div
-          className="mt-2 h-1.5 overflow-hidden rounded-full bg-border"
-          role="progressbar"
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-          aria-label="Form completion"
-        >
-          <div
-            className="h-full rounded-full bg-brand transition-[width] duration-300"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
+        <Progress value={percent} className="h-1.5" aria-label="Form completion" />
       </div>
 
       {FIELD_SECTIONS.map((section) => (
-        <fieldset
-          key={section.id}
-          className="rounded-xl border border-border bg-surface p-4 sm:p-6"
-        >
-          <legend className="px-1 text-base font-semibold text-ink">
-            {section.title}
-          </legend>
-          <p className="mb-4 text-sm text-ink-muted">{section.description}</p>
+        <Card key={section.id}>
+          <CardContent>
+            <FieldSet>
+              <div>
+                <FieldLegend className="font-heading">
+                  {section.title}
+                </FieldLegend>
+                <FieldDescription>{section.description}</FieldDescription>
+              </div>
 
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {section.fields.map((field) => (
-              <FormField
-                key={field}
-                name={field}
-                register={register}
-                error={formState.errors[field]?.message}
-              />
-            ))}
-          </div>
-        </fieldset>
+              <FieldGroup className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                {section.fields.map((field) => (
+                  <FormField
+                    key={field}
+                    name={field}
+                    register={register}
+                    control={control}
+                    error={formState.errors[field]?.message}
+                  />
+                ))}
+              </FieldGroup>
+            </FieldSet>
+          </CardContent>
+        </Card>
       ))}
 
+      {formState.submitCount > 0 && !formState.isValid && (
+        <Alert variant="destructive">
+          <TriangleAlertIcon />
+          <AlertTitle>
+            Some required fields still need attention — they are marked above.
+          </AlertTitle>
+        </Alert>
+      )}
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-ink-muted">
+        <p className="text-sm text-muted-foreground">
           Staff can already see what you have typed. Submitting tells them the
           form is final.
         </p>
-        <button
-          type="submit"
-          className="w-full rounded-lg bg-brand px-5 py-3 font-semibold text-brand-ink transition hover:bg-brand-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand sm:w-auto"
-        >
+        <Button type="submit" size="lg" className="w-full sm:w-auto">
           Submit form
-        </button>
+        </Button>
       </div>
-
-      {formState.submitCount > 0 && !formState.isValid && (
-        <p role="alert" className="text-sm text-danger">
-          Some required fields still need attention — they are marked above.
-        </p>
-      )}
     </form>
   );
 }

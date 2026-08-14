@@ -82,7 +82,11 @@ src/
 ├── components/
 │   ├── patient/                PatientForm, FormField, SubmittedPanel
 │   ├── staff/                  StaffDashboard, SessionCard, SessionDetail, LiveField
-│   ├── ui/                     StatusPill, ConnectionBadge
+│   ├── ui/                     shadcn/ui primitives — owned by the CLI, not edited by hand
+│   ├── StatusPill.tsx          Session state as a coloured badge
+│   ├── ConnectionBadge.tsx     Realtime connection state
+│   ├── ThemeProvider.tsx       next-themes, defaulting to the OS setting
+│   ├── ModeToggle.tsx          Light / dark / system switch
 │   └── SetupNotice.tsx         Shown when env vars are absent
 │
 └── lib/
@@ -114,12 +118,30 @@ Three rules shape the layout:
 
 ## Design
 
-The visual system is a small set of CSS custom properties declared once and
-re-declared under `prefers-color-scheme: dark`, mapped to Tailwind utilities
-through `@theme inline`. Because the tokens flip rather than the classes, almost
-no component carries a `dark:` variant — `bg-surface` is correct in both
-schemes. Native controls follow via `color-scheme`, so the date picker is themed
-too.
+The interface is built on **shadcn/ui** with a custom preset, installed with:
+
+```bash
+npx shadcn@latest apply --preset b311momZs0
+```
+
+That preset owns the palette, the radius scale and the typography (DM Sans for
+body, Outfit for headings), all as CSS custom properties in `globals.css`. Two
+conventions keep it maintainable:
+
+- **Everything above the "Application tokens" divider in `globals.css` belongs
+  to the CLI.** Re-running `apply` rewrites it. Anything the app needs that the
+  preset has no opinion about — the four session-state colours, the field-flash
+  highlight — is declared below the divider and mapped through its own
+  `@theme inline` block.
+- **`components/ui/` is generated, not authored.** App components compose those
+  primitives; they don't fork them.
+
+Dark mode is a `.dark` class rather than a media query, which is what the preset
+emits. `next-themes` applies it, defaulting to `system` — so the app still
+follows the OS unless the reader picks a side from the header toggle. Native
+controls follow via `color-scheme`, so the date picker is themed too. Because
+the tokens flip rather than the classes, almost no component carries a `dark:`
+variant.
 
 **Mobile first.** Patients are on phones in a waiting room; staff are usually at
 a desk. The two interfaces are shaped by that difference rather than by one
@@ -305,4 +327,4 @@ submit; nothing about the realtime layer would change.
 ## Tech stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 ·
-react-hook-form + Zod · Supabase Realtime · Vercel
+shadcn/ui (Radix) · react-hook-form + Zod · Supabase Realtime · Vercel

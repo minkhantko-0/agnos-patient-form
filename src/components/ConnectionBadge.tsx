@@ -1,21 +1,22 @@
 import type { ConnectionState } from "@/lib/realtime/protocol";
+import { cn } from "@/lib/utils";
 
 const COPY: Record<ConnectionState, { label: string; className: string }> = {
   connecting: {
     label: "Connecting…",
-    className: "text-ink-muted",
+    className: "text-muted-foreground",
   },
   connected: {
     label: "Live",
-    className: "text-[var(--status-submitted)]",
+    className: "text-status-submitted",
   },
   error: {
     label: "Connection lost",
-    className: "text-danger",
+    className: "text-destructive",
   },
   closed: {
     label: "Disconnected",
-    className: "text-ink-muted",
+    className: "text-muted-foreground",
   },
 };
 
@@ -24,12 +25,15 @@ export function ConnectionBadge({ state }: { state: ConnectionState }) {
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 text-xs font-medium ${className}`}
+      className={cn(
+        "inline-flex items-center gap-1.5 text-xs font-medium",
+        className,
+      )}
       // Screen readers should hear connection drops without needing focus.
       role="status"
       aria-live="polite"
     >
-      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+      <span className="size-1.5 rounded-full bg-current" />
       {label}
     </span>
   );

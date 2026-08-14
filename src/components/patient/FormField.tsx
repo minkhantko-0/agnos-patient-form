@@ -1,19 +1,22 @@
 "use client";
 
-import type { UseFormRegister } from "react-hook-form";
+import { Controller, type Control, type UseFormRegister } from "react-hook-form";
 
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import {
   FIELD_META,
   type PatientField,
   type PatientFormValues,
 } from "@/lib/patient/schema";
-
-const CONTROL =
-  "w-full rounded-lg border border-border bg-surface px-3 py-2.5 text-ink " +
-  "outline-none transition placeholder:text-ink-faint " +
-  "focus:border-brand focus:ring-2 focus:ring-brand/30 " +
-  "aria-invalid:border-danger aria-invalid:ring-2 aria-invalid:ring-danger/20 " +
-  "disabled:cursor-not-allowed disabled:opacity-60";
 
 /**
  * Renders whichever control `FIELD_META` declares for the field. Adding a field
@@ -22,11 +25,13 @@ const CONTROL =
 export function FormField({
   name,
   register,
+  control,
   error,
   disabled,
 }: {
   name: PatientField;
   register: UseFormRegister<PatientFormValues>;
+  control: Control<PatientFormValues>;
   error?: string;
   disabled?: boolean;
 }) {
@@ -39,58 +44,80 @@ export function FormField({
     disabled,
     "aria-invalid": invalid,
     "aria-describedby": invalid ? errorId : undefined,
-    ...register(name),
   };
 
+  // Read out here rather than inside `render`, where the discriminant on
+  // `meta.input` is no longer visible to the compiler.
+  const options = meta.input.kind === "select" ? meta.input.options : [];
+
   return (
-    <div className={meta.input.kind === "textarea" ? "sm:col-span-2" : ""}>
-      <label
-        htmlFor={name}
-        className="mb-1.5 flex items-baseline gap-2 text-sm font-medium text-ink"
-      >
+    <Field
+      data-invalid={invalid}
+      className={meta.input.kind === "textarea" ? "sm:col-span-2" : undefined}
+    >
+      <FieldLabel htmlFor={name} className="items-baseline">
         {meta.label}
         {"optional" in meta && meta.optional ? (
-          <span className="text-xs font-normal text-ink-faint">Optional</span>
+          <span className="text-xs font-normal text-muted-foreground">
+            Optional
+          </span>
         ) : (
-          <span aria-hidden className="text-danger">
+          <span aria-hidden className="text-destructive">
             *
           </span>
         )}
-      </label>
+      </FieldLabel>
 
       {meta.input.kind === "select" ? (
-        <select {...shared} className={CONTROL}>
-          {/* Matches the `""` the form is initialised with, so an untouched
-              select shows the prompt instead of silently picking option one. */}
-          <option value="">Select…</option>
-          {meta.input.options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
+        // Radix's select is not a native control, so it cannot be wired up with
+        // `register` — `Controller` bridges it to the form state instead. An
+        // empty value matches no item, which is what shows the placeholder.
+        <Controller
+          name={name}
+          control={control}
+          render={({ field }) => (
+            <Select
+              value={field.value}
+              onValueChange={field.onChange}
+              disabled={disabled}
+            >
+              <SelectTrigger
+                {...shared}
+                className="w-full"
+                ref={field.ref}
+                onBlur={field.onBlur}
+              >
+                <SelectValue placeholder="Select…" />
+              </SelectTrigger>
+              <SelectContent>
+                {options.map((option) => (
+                  <SelectItem key={option} value={option}>
+                    {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
+        />
       ) : meta.input.kind === "textarea" ? (
-        <textarea
+        <Textarea
           {...shared}
+          {...register(name)}
           rows={meta.input.rows}
           placeholder={"placeholder" in meta ? meta.placeholder : undefined}
-          className={`${CONTROL} resize-y`}
+          className="resize-y"
         />
       ) : (
-        <input
+        <Input
           {...shared}
+          {...register(name)}
           type={"type" in meta.input ? meta.input.type : "text"}
           autoComplete={meta.input.autoComplete}
           placeholder={"placeholder" in meta ? meta.placeholder : undefined}
-          className={CONTROL}
         />
       )}
 
-      {error && (
-        <p id={errorId} className="mt-1.5 text-sm text-danger">
-          {error}
-        </p>
-      )}
-    </div>
+      <FieldError id={errorId}>{error}</FieldError>
+    </Field>
   );
 }

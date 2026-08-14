@@ -2,8 +2,16 @@
 
 import Link from "next/link";
 
+import { StatusPill } from "@/components/StatusPill";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import type { LobbySession } from "@/lib/realtime/protocol";
-import { StatusPill } from "@/components/ui/StatusPill";
 import { elapsed, relativeTime } from "@/lib/time";
 
 export function SessionCard({
@@ -18,49 +26,51 @@ export function SessionCard({
   return (
     <Link
       href={`/staff/${session.sessionId}`}
-      className="group block rounded-xl border border-border bg-surface p-4 transition hover:border-brand hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+      className="group block rounded-2xl outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="truncate font-semibold text-ink group-hover:text-brand">
+      <Card
+        size="sm"
+        className="h-full transition-all group-hover:ring-primary/40"
+      >
+        <CardHeader>
+          <CardTitle className="truncate group-hover:text-primary">
             {session.name}
-          </p>
-          <p className="mt-0.5 font-mono text-xs text-ink-faint">
+          </CardTitle>
+          <p className="truncate font-mono text-xs text-muted-foreground">
             {session.sessionId}
           </p>
-        </div>
-        <StatusPill status={session.status} size="sm" />
-      </div>
+          <CardAction>
+            <StatusPill status={session.status} size="sm" />
+          </CardAction>
+        </CardHeader>
 
-      <div className="mt-4">
-        <div className="flex items-baseline justify-between text-xs text-ink-muted">
-          <span>
-            {session.completed}/{session.required} required
-          </span>
-          <span>{percent}%</span>
-        </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-border">
-          <div
-            className="h-full rounded-full bg-brand transition-[width] duration-300"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-      </div>
+        <CardContent className="space-y-1.5">
+          <div className="flex items-baseline justify-between text-xs text-muted-foreground">
+            <span>
+              {session.completed}/{session.required} required
+            </span>
+            <span>{percent}%</span>
+          </div>
+          <Progress value={percent} className="h-1.5" />
+        </CardContent>
 
-      <dl className="mt-4 flex justify-between text-xs text-ink-muted">
-        <div>
-          <dt className="text-ink-faint">Open for</dt>
-          <dd className="mt-0.5 font-medium text-ink">
-            {now === null ? "—" : elapsed(session.startedAt, now)}
-          </dd>
-        </div>
-        <div className="text-right">
-          <dt className="text-ink-faint">Last activity</dt>
-          <dd className="mt-0.5 font-medium text-ink">
-            {now === null ? "—" : relativeTime(session.updatedAt, now)}
-          </dd>
-        </div>
-      </dl>
+        <CardContent>
+          <dl className="flex justify-between text-xs">
+            <div>
+              <dt className="text-muted-foreground">Open for</dt>
+              <dd className="mt-0.5 font-medium">
+                {now === null ? "—" : elapsed(session.startedAt, now)}
+              </dd>
+            </div>
+            <div className="text-right">
+              <dt className="text-muted-foreground">Last activity</dt>
+              <dd className="mt-0.5 font-medium">
+                {now === null ? "—" : relativeTime(session.updatedAt, now)}
+              </dd>
+            </div>
+          </dl>
+        </CardContent>
+      </Card>
     </Link>
   );
 }
