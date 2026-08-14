@@ -3,6 +3,7 @@
 import { Controller, type Control, type UseFormRegister } from "react-hook-form";
 
 import { DatePicker } from "@/components/DatePicker";
+import { SearchableSelect } from "@/components/SearchableSelect";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,6 +46,10 @@ export function FormField({
 
   // Hoisted: inside `render` the discriminant on `meta.input` is lost.
   const options = meta.input.kind === "select" ? meta.input.options : [];
+  const searchable =
+    meta.input.kind === "select" &&
+    "searchable" in meta.input &&
+    meta.input.searchable;
 
   return (
     <Field
@@ -64,7 +69,22 @@ export function FormField({
         )}
       </FieldLabel>
 
-      {meta.input.kind === "select" ? (
+      {meta.input.kind === "select" && searchable ? (
+        <Controller
+          name={name}
+          control={control}
+          render={({ field }) => (
+            <SearchableSelect
+              {...shared}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              options={options}
+              placeholder="Search…"
+            />
+          )}
+        />
+      ) : meta.input.kind === "select" ? (
         // Not a native control, so `register` cannot drive it. An empty value
         // matches no item, which is what shows the placeholder.
         <Controller

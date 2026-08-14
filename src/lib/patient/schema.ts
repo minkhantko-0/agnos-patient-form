@@ -104,7 +104,7 @@ type FieldMeta = {
   input:
     | { kind: "text"; type?: "text" | "tel" | "email"; autoComplete?: string }
     | { kind: "date" }
-    | { kind: "select"; options: readonly string[] }
+    | { kind: "select"; options: readonly string[]; searchable?: boolean }
     | { kind: "textarea"; rows: number };
 };
 
@@ -146,11 +146,11 @@ export const FIELD_META = {
   },
   preferredLanguage: {
     label: "Preferred language",
-    input: { kind: "select", options: LANGUAGES },
+    input: { kind: "select", options: LANGUAGES, searchable: true },
   },
   nationality: {
     label: "Nationality",
-    input: { kind: "select", options: NATIONALITIES },
+    input: { kind: "select", options: NATIONALITIES, searchable: true },
   },
   religion: {
     label: "Religion",

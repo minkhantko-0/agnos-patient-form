@@ -85,6 +85,7 @@ src/
 │   ├── ui/                     shadcn/ui primitives — owned by the CLI, not edited by hand
 │   ├── DatePicker.tsx          Calendar in a popover, for date of birth
 │   ├── MainNav.tsx             Header links, marking the current view
+│   ├── SearchableSelect.tsx    Type-to-filter combobox for the long lists
 │   ├── SessionGuard.tsx        Warns before navigation ends a live session
 │   ├── StatusPill.tsx          Session state as a coloured badge
 │   ├── ConnectionBadge.tsx     Realtime connection state
@@ -162,6 +163,11 @@ Specific decisions:
 - **Progress is measured against required fields only.** Counting the optional
   ones would make a complete form read as 85% done and stall the bar near the
   end.
+- **Only the long lists are searchable.** Nationality has 53 options and
+  language 18, so both are comboboxes; gender, religion and relationship are
+  short enough to scan and stay plain selects. `FIELD_META` decides with a
+  `searchable` flag, so the choice stays with the field definition rather than
+  the markup.
 - **Validation waits for blur, then goes live.** `mode: "onBlur"` with
   `reValidateMode: "onChange"` means nobody is told their email is invalid while
   they are still typing the domain, but a correction clears the error
@@ -208,6 +214,7 @@ app/form/[sessionId]                       app/staff                app/staff/[s
 | `SessionDetail` | Combines presence and broadcast into a single status, then renders the whole form read-only. |
 | `LiveField` | One label/value pair that flashes when its value changes. |
 | `DatePicker` | Date of birth: a calendar in a popover, with month and year menus bounded to 1900–today. Values stay `YYYY-MM-DD` strings so the wire format never changes. |
+| `SearchableSelect` | Type-to-filter combobox, used where a list is too long to scan. Selection-only: typing narrows the options rather than setting free text, so the value is always one of `options`. |
 | `StatusPill` / `ConnectionBadge` | The two indicators, shared by both views. |
 | `MainNav` | Header links, marking the current view with `aria-current` and a filled pill. |
 | `SessionGuard` | Provider plus `GuardedLink`. Once the form has content, in-app links ask before navigating and offer to open the destination in a new tab, so watching the staff view need not end the session. |
@@ -347,9 +354,11 @@ submit; nothing about the realtime layer would change.
   offers to open the destination in a new tab — because a session lives only as
   long as its tab.
 - **Current-view indicator** in the header.
+- **Searchable selects** for nationality and preferred language.
 - **Explicit setup notice** when environment variables are missing.
 
 ## Tech stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Tailwind CSS v4 ·
-shadcn/ui (Radix) · react-hook-form + Zod · Supabase Realtime · Vercel
+shadcn/ui (Radix, plus Base UI for the combobox) · react-hook-form + Zod ·
+Supabase Realtime · Vercel
