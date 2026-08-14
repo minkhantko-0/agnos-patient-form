@@ -40,8 +40,6 @@ export function StatusPill({
       )}
     >
       <span className="relative flex size-2">
-        {/* Only the active state pulses — a resting indicator that animates
-            forever reads as "something is happening" when nothing is. */}
         {status === "filling" && (
           <span
             className={cn(

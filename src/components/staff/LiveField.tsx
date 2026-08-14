@@ -17,8 +17,7 @@ export function LiveField({
 
   return (
     <div
-      // Remounting on each change restarts the flash animation, which a plain
-      // class toggle would not do while the previous one is still running.
+      // Remounting restarts the flash; toggling the class mid-animation would not.
       key={changed ? "on" : "off"}
       className={cn("rounded-lg px-3 py-2", changed && "field-flash")}
     >
@@ -33,7 +32,6 @@ export function LiveField({
           "mt-0.5 text-sm break-words",
           filled ? "font-medium" : "text-muted-foreground italic",
         )}
-        // Announce the new value to a screen reader when it lands.
         aria-live="polite"
       >
         {filled ? value : "—"}

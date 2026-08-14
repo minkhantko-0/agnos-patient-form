@@ -42,15 +42,8 @@ export function SessionDetail({ sessionId }: { sessionId: string }) {
     (session) => session.sessionId === sessionId,
   );
 
-  /*
-   * Two independent signals combine here:
-   *   presence  — is the patient's tab still open? (lobby, ~1s granularity)
-   *   broadcast — what are they doing? (session channel, ~150ms granularity)
-   *
-   * Broadcast wins while the patient is present because it is the fresher of
-   * the two. A submitted form stays "Submitted" after they close the tab; any
-   * other state becomes "Left the form".
-   */
+  // Presence says whether the tab is open; broadcast, fresher, says what they
+  // are doing — so it wins while they are present.
   const status: SessionStatus = presence
     ? (monitor.status ?? presence.status)
     : monitor.status === "submitted"

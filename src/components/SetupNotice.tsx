@@ -3,11 +3,6 @@ import { PlugZapIcon } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-/**
- * Shown instead of the realtime UI when the Supabase environment variables are
- * missing. Without this the app looks merely broken — channels never subscribe
- * and every view sits on "Connecting…" forever.
- */
 export function SetupNotice() {
   return (
     <Card className="mx-auto max-w-xl">

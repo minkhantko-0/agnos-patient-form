@@ -5,14 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { randomId } from "@/lib/realtime/client";
 
-/**
- * `/form` mints a session and forwards to `/form/<id>`.
- *
- * The id lives in `sessionStorage`, which is per-tab: refreshing keeps the same
- * session (and so the same row in the staff list), while a second tab becomes a
- * second patient — which is what makes the multi-session view demonstrable on
- * one machine.
- */
+// sessionStorage is per-tab: a refresh keeps the session, a second tab becomes
+// a second patient.
 const ACTIVE_SESSION_KEY = "agnos:active-session";
 
 export default function NewSessionPage() {

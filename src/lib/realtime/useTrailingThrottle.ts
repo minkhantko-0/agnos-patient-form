@@ -4,11 +4,8 @@ import { useCallback, useEffect, useMemo, useRef } from "react";
 
 /**
  * Rate-limits an outgoing send: the first call goes immediately, and further
- * calls inside the interval collapse into one trailing call at the end of it.
- *
- * Leading-edge matters here — the first keystroke in a burst should reach the
- * staff view without waiting out the interval — and the trailing call
- * guarantees the last keystroke is never the one that gets dropped.
+ * calls inside the interval collapse into one trailing call at the end of it,
+ * so the last keystroke is never the one dropped.
  */
 export function useTrailingThrottle(intervalMs: number, run: () => void) {
   const runRef = useRef(run);
@@ -25,14 +22,12 @@ export function useTrailingThrottle(intervalMs: number, run: () => void) {
     timer.current = null;
   }, []);
 
-  /** Send right now, cancelling any pending trailing call. */
   const flush = useCallback(() => {
     clear();
     lastRunAt.current = Date.now();
     runRef.current();
   }, [clear]);
 
-  /** Send now if the interval has elapsed, otherwise queue the trailing call. */
   const schedule = useCallback(() => {
     if (timer.current !== null) return;
 

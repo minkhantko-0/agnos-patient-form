@@ -32,12 +32,8 @@ function isSummary(value: unknown): value is SessionSummary {
 }
 
 /**
- * Read-only view of every patient tab currently open.
- *
- * Two signals are merged:
- *   presence   who is here. Supabase removes a client's presence when its
- *              socket drops, so a closed tab needs no timeout logic on our side.
- *   summary    name, status and progress, broadcast as they change.
+ * Read-only view of every patient tab currently open: presence for who is
+ * here, broadcast summaries for name, status and progress.
  *
  * Presence is the gate — a session is listed only while its tab is open — and
  * the summary fills in the detail. Staff subscribe without calling `track()`,
@@ -85,15 +81,13 @@ export function useLobby() {
           return new Map(prev).set(payload.sessionId, payload);
         });
       })
-      // Only `sync` is read. It fires after a diff has been fully applied,
-      // whereas a `join`/`leave` handler can observe the state mid-update —
-      // including a key whose metas have been emptied but not yet removed.
+      // Only `sync`: join/leave can observe the state mid-update, including a
+      // key whose metas are emptied but not yet removed.
       .on("presence", { event: "sync" }, readPresence)
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setConnection("connected");
-          // Broadcast has no history, so ask whoever is already here to
-          // re-send their summary rather than waiting for their next keystroke.
+          // Broadcast has no history; ask whoever is here to re-send.
           if (canPush(channel)) {
             void channel.send({
               type: "broadcast",
@@ -118,8 +112,7 @@ export function useLobby() {
       .map((identity) => {
         const summary = summaries.get(identity.sessionId);
 
-        // A tab that has joined but not yet sent a summary still belongs in the
-        // list — it renders as an empty session rather than disappearing.
+        // A tab that has joined but not yet sent a summary still belongs here.
         return {
           sessionId: identity.sessionId,
           startedAt: identity.startedAt,

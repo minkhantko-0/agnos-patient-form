@@ -19,9 +19,8 @@ export function ModeToggle() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon-sm" aria-label="Change theme">
-          {/* Both icons are rendered and cross-faded by the `dark` variant, so
-              the button never has to wait for the theme to resolve on the
-              client — which would otherwise flash the wrong icon on load. */}
+          {/* Both icons render and cross-fade, so the button never waits for
+              the theme to resolve and flash the wrong one. */}
           <SunIcon className="scale-100 rotate-0 transition-transform dark:scale-0 dark:-rotate-90" />
           <MoonIcon className="absolute scale-0 rotate-90 transition-transform dark:scale-100 dark:rotate-0" />
         </Button>

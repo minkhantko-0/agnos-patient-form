@@ -29,7 +29,6 @@ export function ConnectionBadge({ state }: { state: ConnectionState }) {
         "inline-flex items-center gap-1.5 text-xs font-medium",
         className,
       )}
-      // Screen readers should hear connection drops without needing focus.
       role="status"
       aria-live="polite"
     >

@@ -29,8 +29,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="en"
-      // next-themes writes the theme class here before paint; React would
-      // otherwise flag the server and client markup as mismatched.
+      // next-themes writes the theme class here before paint.
       suppressHydrationWarning
       className={cn(
         "h-full antialiased",
@@ -46,8 +45,6 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           enableSystem
           disableTransitionOnChange
         >
-          {/* Deliberately not sticky: the patient form pins its own progress
-              bar to the top of the viewport. */}
           <header className="border-b bg-card">
             <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
               <Link

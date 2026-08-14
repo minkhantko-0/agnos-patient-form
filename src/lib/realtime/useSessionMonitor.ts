@@ -18,7 +18,6 @@ import {
   type StatePayload,
 } from "./protocol";
 
-/** How long a just-changed field stays highlighted in the staff view. */
 const HIGHLIGHT_MS = 1_400;
 
 type Snapshot = {
@@ -37,12 +36,7 @@ function isStatePayload(value: unknown): value is StatePayload {
   );
 }
 
-/**
- * One staff member watching one patient session.
- *
- * Holds the last state the patient broadcast, plus the set of fields that
- * changed in the most recent message so the UI can flash them.
- */
+/** One staff member watching one patient session. */
 export function useSessionMonitor(sessionId: string) {
   const [connection, setConnection] =
     useState<ConnectionState>(INITIAL_CONNECTION);
@@ -80,7 +74,7 @@ export function useSessionMonitor(sessionId: string) {
       .on("broadcast", { event: EVENT.state }, ({ payload }) => {
         if (!isStatePayload(payload)) return;
 
-        // Broadcast does not promise ordering; ignore anything we've passed.
+        // Broadcast is unordered; ignore anything we have passed.
         if (payload.revision <= revision.current) return;
         const isFirst = revision.current === -1;
         revision.current = payload.revision;
@@ -96,14 +90,12 @@ export function useSessionMonitor(sessionId: string) {
           at: payload.at,
         });
 
-        // Skip the first message: everything differs from a blank baseline and
-        // lighting up the whole form on open reads as noise, not as an update.
+        // Skip the first: everything differs from a blank baseline.
         if (!isFirst && diff.length > 0) highlight(diff);
       })
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
           setConnection("connected");
-          // Ask the patient tab to replay its current state to us.
           void channel.send({
             type: "broadcast",
             event: EVENT.hello,

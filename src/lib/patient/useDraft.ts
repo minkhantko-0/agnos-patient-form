@@ -12,13 +12,7 @@ type Draft = { values: PatientFormValues; submitted: boolean };
 
 const key = (sessionId: string) => `agnos:session:${sessionId}`;
 
-/**
- * Keeps the patient's own copy of their answers in `localStorage`.
- *
- * Nothing is stored on a server, so a refresh would otherwise wipe a
- * half-finished form. This is the patient's device only — the staff view still
- * sees a session as gone the moment the tab closes.
- */
+/** The patient's own copy of their answers, on their device only. */
 export function useDraft(sessionId: string) {
   const load = useCallback((): Draft | null => {
     try {
@@ -31,8 +25,7 @@ export function useDraft(sessionId: string) {
       const { values, submitted } = parsed as Partial<Draft>;
       if (typeof values !== "object" || values === null) return null;
 
-      // Rebuild from the known field list so a stored draft written by an older
-      // version of the schema cannot inject unexpected keys.
+      // Rebuild from the known fields so an older draft cannot inject keys.
       const restored = { ...EMPTY_PATIENT };
       for (const field of PATIENT_FIELDS) {
         const value = (values as Record<string, unknown>)[field];
@@ -53,8 +46,7 @@ export function useDraft(sessionId: string) {
           JSON.stringify({ values, submitted } satisfies Draft),
         );
       } catch {
-        // Private browsing or a full quota — the form still works, it just
-        // will not survive a refresh.
+        // Private browsing or a full quota; the form still works.
       }
     },
     [sessionId],
@@ -68,7 +60,6 @@ export function useDraft(sessionId: string) {
     }
   }, [sessionId]);
 
-  // Stable identity: the form keeps this in an effect's dependency list, and a
-  // fresh object each render would re-subscribe the watcher on every keystroke.
+  // Stable identity: the form has this in a dependency list.
   return useMemo(() => ({ load, save, clear }), [load, save, clear]);
 }

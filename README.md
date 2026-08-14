@@ -187,7 +187,7 @@ app/form/[sessionId]                       app/staff                app/staff/[s
 | Component | Purpose |
 | --- | --- |
 | `PatientForm` | Owns form state (react-hook-form + Zod), subscribes to its own changes and forwards them to the publisher, saves a local draft, and swaps to the confirmation panel on submit. |
-| `FormField` | Renders whichever control `FIELD_META` declares — text, select, or textarea — with its label, optional marker, and error. There is no per-field JSX anywhere. |
+| `FormField` | Renders whichever control `FIELD_META` declares — text, date, select, or textarea — with its label, optional marker, and error. There is no per-field JSX anywhere. |
 | `SubmittedPanel` | Confirmation plus a read-back of what was sent, with a route back into editing. |
 | `StaffDashboard` | The lobby: active session count, connection state, and a card grid. |
 | `SessionCard` | One session at a glance — name, status, progress, how long it has been open, last activity. |

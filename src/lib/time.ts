@@ -22,8 +22,7 @@ function subscribe(listener: () => void) {
   listeners.add(listener);
 
   if (timer === null) {
-    // React re-reads the snapshot right after subscribing, so seeding the value
-    // here is enough — no need to notify.
+    // React re-reads the snapshot after subscribing, so seeding is enough.
     now = Date.now();
     timer = setInterval(tick, 1_000);
   }

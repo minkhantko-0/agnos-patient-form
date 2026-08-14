@@ -27,12 +27,7 @@ import {
 } from "./protocol";
 import { useTrailingThrottle } from "./useTrailingThrottle";
 
-/**
- * Everything the patient tab sends outward.
- *
- * Owns the status machine (`filling` → `idle` after a pause → `submitted`) so
- * the form component only has to say what happened, not what it means.
- */
+/** Everything the patient tab sends outward, and the status machine with it. */
 export function usePatientPublisher(sessionId: string) {
   const [connection, setConnection] =
     useState<ConnectionState>(INITIAL_CONNECTION);
@@ -97,7 +92,6 @@ export function usePatientPublisher(sessionId: string) {
     idleTimer.current = null;
   }, []);
 
-  /** The patient typed. Announce activity and start counting down to idle. */
   const publish = useCallback(
     (values: PatientFormValues) => {
       if (stateRef.current.status === "submitted") return;
@@ -117,7 +111,7 @@ export function usePatientPublisher(sessionId: string) {
     [commit, state, summary, clearIdleTimer],
   );
 
-  /** Load values without claiming the patient is active — e.g. a restored draft. */
+  /** Load values without claiming the patient is active. */
   const seed = useCallback(
     (values: PatientFormValues) => {
       commit(values, stateRef.current.status);
@@ -127,7 +121,7 @@ export function usePatientPublisher(sessionId: string) {
     [commit, state, summary],
   );
 
-  /** Terminal state: no further updates are sent for this session. */
+  /** Terminal: no further updates are sent for this session. */
   const markSubmitted = useCallback(
     (values: PatientFormValues) => {
       clearIdleTimer();
@@ -150,8 +144,7 @@ export function usePatientPublisher(sessionId: string) {
     session.current = sessionCh;
 
     sessionCh
-      // Broadcast keeps no history, so a staff tab opening mid-form would see
-      // nothing until the next keystroke. It says hello; we replay immediately.
+      // A staff tab opened mid-form and has no history to read.
       .on("broadcast", { event: EVENT.hello }, () => state.flush())
       .subscribe((status) => {
         if (status === "SUBSCRIBED") {
@@ -170,15 +163,12 @@ export function usePatientPublisher(sessionId: string) {
     lobby.current = lobbyCh;
 
     lobbyCh
-      // A staff list just opened and has no summaries yet.
       .on("broadcast", { event: EVENT.hello }, () => summary.flush())
       .subscribe((status) => {
         if (status !== "SUBSCRIBED") return;
 
-        // Tracked once per join and never again: presence answers "is this tab
-        // still open", and re-tracking to publish values would make the entry
-        // blink out of the staff list. Runs again after an automatic rejoin,
-        // which is when it is genuinely needed.
+        // Once per join and never again — re-tracking to publish values makes
+        // the entry blink out of the staff list.
         void lobbyCh.track({
           sessionId,
           startedAt: startedAt.current,

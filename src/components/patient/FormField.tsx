@@ -2,6 +2,7 @@
 
 import { Controller, type Control, type UseFormRegister } from "react-hook-form";
 
+import { DatePicker } from "@/components/DatePicker";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,10 +19,6 @@ import {
   type PatientFormValues,
 } from "@/lib/patient/schema";
 
-/**
- * Renders whichever control `FIELD_META` declares for the field. Adding a field
- * to the schema is enough to make it appear here — there is no per-field JSX.
- */
 export function FormField({
   name,
   register,
@@ -46,8 +43,7 @@ export function FormField({
     "aria-describedby": invalid ? errorId : undefined,
   };
 
-  // Read out here rather than inside `render`, where the discriminant on
-  // `meta.input` is no longer visible to the compiler.
+  // Hoisted: inside `render` the discriminant on `meta.input` is lost.
   const options = meta.input.kind === "select" ? meta.input.options : [];
 
   return (
@@ -69,9 +65,8 @@ export function FormField({
       </FieldLabel>
 
       {meta.input.kind === "select" ? (
-        // Radix's select is not a native control, so it cannot be wired up with
-        // `register` — `Controller` bridges it to the form state instead. An
-        // empty value matches no item, which is what shows the placeholder.
+        // Not a native control, so `register` cannot drive it. An empty value
+        // matches no item, which is what shows the placeholder.
         <Controller
           name={name}
           control={control}
@@ -97,6 +92,20 @@ export function FormField({
                 ))}
               </SelectContent>
             </Select>
+          )}
+        />
+      ) : meta.input.kind === "date" ? (
+        <Controller
+          name={name}
+          control={control}
+          render={({ field }) => (
+            <DatePicker
+              {...shared}
+              value={field.value}
+              onChange={field.onChange}
+              onBlur={field.onBlur}
+              placeholder="Select a date of birth"
+            />
           )}
         />
       ) : meta.input.kind === "textarea" ? (

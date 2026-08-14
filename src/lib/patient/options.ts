@@ -1,9 +1,5 @@
-/**
- * Choice lists for the patient form's select inputs.
- *
- * Kept apart from the schema so the same arrays can populate a `<select>` and
- * validate a submission without either side drifting from the other.
- */
+// Kept apart from the schema so the same arrays populate the selects and
+// validate a submission.
 
 export const GENDERS = [
   "Female",

@@ -42,8 +42,6 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
     defaultValues: EMPTY_PATIENT,
-    // Don't scold someone mid-word: validate when they leave a field, then keep
-    // the message live as they correct it.
     mode: "onBlur",
     reValidateMode: "onChange",
   });
@@ -51,8 +49,7 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
   const { register, control, handleSubmit, formState, watch, reset, getValues } =
     form;
 
-  // Restore a draft from this device before wiring up the outbound feed, so the
-  // first thing staff receive is the recovered form rather than a blank one.
+  // Restore before wiring up the feed, so staff receive the recovered form.
   useEffect(() => {
     if (restored.current) return;
     restored.current = true;
@@ -66,8 +63,6 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
     seed(saved.values);
   }, [draft, reset, seed]);
 
-  // `watch`'s subscription form reports every keystroke without re-rendering
-  // the whole form on each one.
   useEffect(() => {
     const subscription = watch((next) => {
       const values = next as PatientFormValues;

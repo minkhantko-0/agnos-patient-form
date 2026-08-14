@@ -8,13 +8,8 @@ import {
   RELIGIONS,
 } from "./options";
 
-/**
- * A select whose value must come from a fixed list. Modelled as a constrained
- * string rather than `z.enum` on purpose: the form starts every select at `""`,
- * so keeping the inferred type as `string` lets one type describe both a blank
- * draft and a validated submission. That in turn keeps the realtime payload a
- * flat, always-serialisable record of strings.
- */
+// Constrained string rather than `z.enum`: every select starts at `""`, so one
+// type describes both a blank draft and a validated submission.
 const requiredChoice = (options: readonly string[], message: string) =>
   z.string().refine((value) => options.includes(value), { message });
 
@@ -68,7 +63,6 @@ export const patientSchema = z.object({
       return digits >= 7 && digits <= 15;
     }, "Enter 7 to 15 digits"),
 
-  // "Email if applicable" in the brief — validated only once something is typed.
   email: z
     .string()
     .trim()
@@ -105,20 +99,16 @@ export type PatientField = keyof PatientFormValues;
 
 type FieldMeta = {
   label: string;
-  /** Rendered in the staff view when the patient has left the field blank. */
   placeholder?: string;
   optional?: boolean;
   input:
-    | { kind: "text"; type?: "text" | "tel" | "email" | "date"; autoComplete?: string }
+    | { kind: "text"; type?: "text" | "tel" | "email"; autoComplete?: string }
+    | { kind: "date" }
     | { kind: "select"; options: readonly string[] }
     | { kind: "textarea"; rows: number };
 };
 
-/**
- * Single source of truth for every field. The patient form renders from it and
- * the staff view reads from it, so a new field appears on both sides at once
- * and can never be labelled two different things.
- */
+/** Single source of truth: both the form and the staff view render from it. */
 export const FIELD_META = {
   firstName: {
     label: "First name",
@@ -135,7 +125,7 @@ export const FIELD_META = {
   },
   dateOfBirth: {
     label: "Date of birth",
-    input: { kind: "text", type: "date", autoComplete: "bday" },
+    input: { kind: "date" },
   },
   gender: { label: "Gender", input: { kind: "select", options: GENDERS } },
   phone: {
@@ -221,12 +211,11 @@ export const EMPTY_PATIENT: PatientFormValues = Object.fromEntries(
   PATIENT_FIELDS.map((field) => [field, ""]),
 ) as PatientFormValues;
 
-/** Progress across required fields only — what the staff view reports. */
+/** Progress across required fields only. */
 export function countCompleted(values: PatientFormValues) {
   return REQUIRED_FIELDS.filter((field) => values[field].trim() !== "").length;
 }
 
-/** Best available name for a session that may still be half-filled. */
 export function displayName(values: PatientFormValues) {
   const name = [values.firstName, values.lastName]
     .map((part) => part.trim())
