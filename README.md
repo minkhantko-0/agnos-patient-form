@@ -4,7 +4,7 @@ A responsive patient intake form with a live staff view. A patient fills in the
 form on their phone; staff watch each field arrive in real time, along with
 whether the patient is still typing, has gone quiet, or has submitted.
 
-- **Live demo:** _(https://agnos-patient-form-nine.vercel.app)_
+- **Live demo:** https://agnos-patient-form-nine.vercel.app
 - **Patient form:** `/form`
 - **Staff view:** `/staff`
 
@@ -83,6 +83,9 @@ src/
 │   ├── patient/                PatientForm, FormField, SubmittedPanel
 │   ├── staff/                  StaffDashboard, SessionCard, SessionDetail, LiveField
 │   ├── ui/                     shadcn/ui primitives — owned by the CLI, not edited by hand
+│   ├── DatePicker.tsx          Calendar in a popover, for date of birth
+│   ├── MainNav.tsx             Header links, marking the current view
+│   ├── SessionGuard.tsx        Warns before navigation ends a live session
 │   ├── StatusPill.tsx          Session state as a coloured badge
 │   ├── ConnectionBadge.tsx     Realtime connection state
 │   ├── ThemeProvider.tsx       next-themes, defaulting to the OS setting
@@ -101,7 +104,8 @@ src/
     │   ├── useLobby.ts              Inbound: who is currently filling in
     │   ├── useSessionMonitor.ts     Inbound: one session's field values
     │   └── useTrailingThrottle.ts   Leading+trailing send rate limiter
-    └── time.ts                 Shared ticking clock for relative timestamps
+    ├── time.ts                 Shared ticking clock for relative timestamps
+    └── utils.ts                 `cn()` — the shadcn class merger
 ```
 
 Three rules shape the layout:
@@ -138,8 +142,8 @@ conventions keep it maintainable:
 
 Dark mode is a `.dark` class rather than a media query, which is what the preset
 emits. `next-themes` applies it, defaulting to `system` — so the app still
-follows the OS unless the reader picks a side from the header toggle. Native
-controls follow via `color-scheme`, so the date picker is themed too. Because
+follows the OS unless the reader picks a side from the header toggle. `:root`
+also sets `color-scheme`, so native chrome such as scrollbars follows. Because
 the tokens flip rather than the classes, almost no component carries a `dark:`
 variant.
 
@@ -189,7 +193,7 @@ app/form/[sessionId]                       app/staff                app/staff/[s
         │                                       │                          │
    PatientForm ──── usePatientPublisher    StaffDashboard ─ useLobby   SessionDetail
         │                                       │                       │        │
-    FormField ×13                          SessionCard ×N        useSessionMonitor
+    FormField ×13 ─── DatePicker           SessionCard ×N        useSessionMonitor
         │                                                              LiveField ×13
   SubmittedPanel
 ```
@@ -203,7 +207,10 @@ app/form/[sessionId]                       app/staff                app/staff/[s
 | `SessionCard` | One session at a glance — name, status, progress, how long it has been open, last activity. |
 | `SessionDetail` | Combines presence and broadcast into a single status, then renders the whole form read-only. |
 | `LiveField` | One label/value pair that flashes when its value changes. |
+| `DatePicker` | Date of birth: a calendar in a popover, with month and year menus bounded to 1900–today. Values stay `YYYY-MM-DD` strings so the wire format never changes. |
 | `StatusPill` / `ConnectionBadge` | The two indicators, shared by both views. |
+| `MainNav` | Header links, marking the current view with `aria-current` and a filled pill. |
+| `SessionGuard` | Provider plus `GuardedLink`. Once the form has content, in-app links ask before navigating and offer to open the destination in a new tab, so watching the staff view need not end the session. |
 
 The hooks are the seam. `usePatientPublisher` is everything the patient sends;
 `useLobby` and `useSessionMonitor` are everything staff receive. Each returns
@@ -331,7 +338,15 @@ submit; nothing about the realtime layer would change.
 - **Connection state surfaced** in both interfaces instead of silently failing.
 - **Accessibility**: labelled inputs, `aria-describedby` errors, `aria-live`
   status regions, visible focus rings, and a `prefers-reduced-motion` fallback.
-- **Dark mode** driven by system preference.
+- **Dark mode** following the OS by default, with a light/dark/system toggle in
+  the header.
+- **A design system rather than ad-hoc styling** — shadcn/ui with a custom
+  preset, so every control shares one vocabulary.
+- **Date-of-birth calendar** with year and month menus, bounded to 1900–today.
+- **Navigation guard**: once the form has content, leaving it asks first and
+  offers to open the destination in a new tab — because a session lives only as
+  long as its tab.
+- **Current-view indicator** in the header.
 - **Explicit setup notice** when environment variables are missing.
 
 ## Tech stack
