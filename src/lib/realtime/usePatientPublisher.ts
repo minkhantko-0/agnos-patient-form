@@ -11,7 +11,12 @@ import {
   type PatientFormValues,
 } from "@/lib/patient/schema";
 
-import { INITIAL_CONNECTION, canPush, getRealtimeClient } from "./client";
+import {
+  INITIAL_CONNECTION,
+  canPush,
+  getRealtimeClient,
+  randomId,
+} from "./client";
 import {
   BROADCAST_INTERVAL_MS,
   EVENT,
@@ -32,13 +37,15 @@ export function usePatientPublisher(sessionId: string) {
   const [connection, setConnection] =
     useState<ConnectionState>(INITIAL_CONNECTION);
 
-  const stateRef = useRef<StatePayload>({
+  const stateRef = useRef<Omit<StatePayload, "instance">>({
     values: EMPTY_PATIENT,
     status: "idle",
     revision: 0,
     at: 0,
   });
   const startedAt = useRef(0);
+  // Regenerated on every mount, which is exactly what a refresh needs.
+  const [instance] = useState(() => randomId(6));
   const idleTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const session = useRef<RealtimeChannel | null>(null);
   const lobby = useRef<RealtimeChannel | null>(null);
@@ -49,9 +56,9 @@ export function usePatientPublisher(sessionId: string) {
     void session.current?.send({
       type: "broadcast",
       event: EVENT.state,
-      payload: stateRef.current,
+      payload: { ...stateRef.current, instance },
     });
-  }, []);
+  }, [instance]);
 
   const sendSummary = useCallback(() => {
     if (!canPush(lobby.current)) return;
@@ -92,6 +99,16 @@ export function usePatientPublisher(sessionId: string) {
     idleTimer.current = null;
   }, []);
 
+  const startIdleCountdown = useCallback(() => {
+    clearIdleTimer();
+    idleTimer.current = setTimeout(() => {
+      idleTimer.current = null;
+      commit(stateRef.current.values, "idle");
+      state.flush();
+      summary.flush();
+    }, IDLE_AFTER_MS);
+  }, [commit, state, summary, clearIdleTimer]);
+
   const publish = useCallback(
     (values: PatientFormValues) => {
       if (stateRef.current.status === "submitted") return;
@@ -99,16 +116,9 @@ export function usePatientPublisher(sessionId: string) {
       commit(values, "filling");
       state.schedule();
       summary.schedule();
-
-      clearIdleTimer();
-      idleTimer.current = setTimeout(() => {
-        idleTimer.current = null;
-        commit(stateRef.current.values, "idle");
-        state.flush();
-        summary.flush();
-      }, IDLE_AFTER_MS);
+      startIdleCountdown();
     },
-    [commit, state, summary, clearIdleTimer],
+    [commit, state, summary, startIdleCountdown],
   );
 
   /** Load values without claiming the patient is active. */
@@ -119,6 +129,20 @@ export function usePatientPublisher(sessionId: string) {
       summary.schedule();
     },
     [commit, state, summary],
+  );
+
+  /**
+   * Back out of the terminal status. Without this `publish` keeps early
+   * returning and a correction never leaves the patient's tab.
+   */
+  const resume = useCallback(
+    (values: PatientFormValues) => {
+      commit(values, "filling");
+      state.flush();
+      summary.flush();
+      startIdleCountdown();
+    },
+    [commit, state, summary, startIdleCountdown],
   );
 
   /** Terminal: no further updates are sent for this session. */
@@ -189,5 +213,5 @@ export function usePatientPublisher(sessionId: string) {
 
   useEffect(() => clearIdleTimer, [clearIdleTimer]);
 
-  return { connection, publish, seed, markSubmitted };
+  return { connection, publish, seed, resume, markSubmitted };
 }

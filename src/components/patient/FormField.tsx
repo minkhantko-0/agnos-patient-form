@@ -25,13 +25,11 @@ export function FormField({
   register,
   control,
   error,
-  disabled,
 }: {
   name: PatientField;
   register: UseFormRegister<PatientFormValues>;
   control: Control<PatientFormValues>;
   error?: string;
-  disabled?: boolean;
 }) {
   const meta = FIELD_META[name];
   const errorId = `${name}-error`;
@@ -39,7 +37,6 @@ export function FormField({
 
   const shared = {
     id: name,
-    disabled,
     "aria-invalid": invalid,
     "aria-describedby": invalid ? errorId : undefined,
   };
@@ -91,11 +88,7 @@ export function FormField({
           name={name}
           control={control}
           render={({ field }) => (
-            <Select
-              value={field.value}
-              onValueChange={field.onChange}
-              disabled={disabled}
-            >
+            <Select value={field.value} onValueChange={field.onChange}>
               <SelectTrigger
                 {...shared}
                 className="w-full"

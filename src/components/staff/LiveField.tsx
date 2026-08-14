@@ -32,7 +32,6 @@ export function LiveField({
           "mt-0.5 text-sm break-words",
           filled ? "font-medium" : "text-muted-foreground italic",
         )}
-        aria-live="polite"
       >
         {filled ? value : "—"}
       </dd>

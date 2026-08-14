@@ -286,9 +286,12 @@ the next one, instead of holding a permanently corrupt merge.
 opening onto a half-filled form would see nothing until the next keystroke. It
 announces itself; the patient tab replays its current state immediately.
 
-**Revision numbers.** Broadcast does not guarantee ordering, so each message
-carries a counter and the staff side drops anything older than what it has
-already applied.
+**Revision numbers, scoped to a mount.** Broadcast does not guarantee ordering,
+so each message carries a counter and the staff side drops anything older than
+it has applied. The counter restarts at 0 when the patient's tab reloads, which
+would leave an open staff view dropping every payload until the patient had made
+as many edits again — so each message also carries an `instance` id, and the
+staff side resets its counter whenever that changes.
 
 **Two throttle rates.** Field values are throttled to 150ms and presence to 1s,
 both leading-edge-plus-trailing: the first keystroke of a burst goes out
@@ -306,6 +309,12 @@ on a later diff. Presence now carries identity only. Relatedly, the staff list
 rebuilds from `presenceState()` only on the `sync` event, because a `join` or
 `leave` handler can observe the state mid-update.
 
+**Nothing arriving is trusted.** The anon key is public, so anyone can join
+`session:<id>` and broadcast; a client on an older field set would send something
+just as incomplete. The staff side rebuilds values from `PATIENT_FIELDS` and
+falls back on an unrecognised status rather than indexing straight into the
+payload — the same defensive read `useDraft` does for localStorage.
+
 **Nothing is pushed at a channel that has not joined.** `channel.send()` on a
 joining channel does not fail — supabase-js quietly falls back to a REST POST.
 Both senders check first and skip, which is safe precisely because messages
@@ -317,6 +326,25 @@ carry full state and every hook re-flushes from its `SUBSCRIBED` callback.
 broadcast status while the patient is present (it is ~6× fresher) and falls back
 to presence otherwise — with one exception: a submitted form stays "Submitted"
 after the tab closes rather than decaying to "Left the form".
+
+### Known scope cuts
+
+**No authentication on the staff view.** Anyone with the URL can watch live
+sessions, and Supabase Realtime Authorization is not configured, so any client
+holding the anon key can join a session channel. For a real intake system this
+is the first thing to add — staff auth plus channel authorization policies — and
+it is left out here because the brief asks for the realtime interface rather
+than an access-control model.
+
+**Email is optional.** The brief lists it without the "(optional)" marker it
+puts on middle name, emergency contact and religion, but the validation
+requirement says "email if applicable", so it is validated only once something
+is typed.
+
+**Drafts expire after 12 hours.** A patient's answers sit in `localStorage` on
+their own device so a refresh does not lose them. A waiting-room device is
+shared, so anything older than a visit is dropped on sight rather than kept
+indefinitely.
 
 ### What is deliberately not persisted
 

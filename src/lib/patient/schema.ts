@@ -74,7 +74,8 @@ export const patientSchema = z.object({
   address: z
     .string()
     .trim()
-    .min(5, "Address is required")
+    .min(1, "Address is required")
+    .min(5, "Enter the full address")
     .max(300, "Keep this under 300 characters"),
 
   preferredLanguage: requiredChoice(LANGUAGES, "Select a preferred language"),

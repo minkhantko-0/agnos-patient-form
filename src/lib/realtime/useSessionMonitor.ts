@@ -36,6 +36,30 @@ function isStatePayload(value: unknown): value is StatePayload {
   );
 }
 
+const STATUSES: PatientStatus[] = ["filling", "idle", "submitted"];
+
+/*
+ * Anyone holding the public anon key can broadcast on this channel, and a
+ * client on an older field set would send a payload just as incomplete. Rebuild
+ * from the known fields rather than trusting what arrives — the same thing
+ * `useDraft.load()` does for localStorage.
+ */
+function readValues(raw: unknown): PatientFormValues {
+  const source = (raw ?? {}) as Record<string, unknown>;
+  const values = { ...EMPTY_PATIENT };
+
+  for (const field of PATIENT_FIELDS) {
+    const value = source[field];
+    if (typeof value === "string") values[field] = value;
+  }
+
+  return values;
+}
+
+function readStatus(raw: unknown): PatientStatus {
+  return STATUSES.includes(raw as PatientStatus) ? (raw as PatientStatus) : "idle";
+}
+
 /** One staff member watching one patient session. */
 export function useSessionMonitor(sessionId: string) {
   const [connection, setConnection] =
@@ -44,6 +68,7 @@ export function useSessionMonitor(sessionId: string) {
   const [changed, setChanged] = useState<PatientField[]>([]);
 
   const revision = useRef(-1);
+  const instance = useRef<string | null>(null);
   const values = useRef<PatientFormValues>(EMPTY_PATIENT);
   const timers = useRef(new Map<PatientField, ReturnType<typeof setTimeout>>());
 
@@ -74,20 +99,29 @@ export function useSessionMonitor(sessionId: string) {
       .on("broadcast", { event: EVENT.state }, ({ payload }) => {
         if (!isStatePayload(payload)) return;
 
+        // A patient refresh restarts `revision` at 0, so a counter from a new
+        // mount says nothing about the one we were following.
+        if (payload.instance !== instance.current) {
+          instance.current = payload.instance;
+          revision.current = -1;
+          values.current = EMPTY_PATIENT;
+        }
+
         // Broadcast is unordered; ignore anything we have passed.
         if (payload.revision <= revision.current) return;
         const isFirst = revision.current === -1;
         revision.current = payload.revision;
 
+        const next = readValues(payload.values);
         const diff = PATIENT_FIELDS.filter(
-          (field) => values.current[field] !== payload.values[field],
+          (field) => values.current[field] !== next[field],
         );
-        values.current = payload.values;
+        values.current = next;
 
         setSnapshot({
-          values: payload.values,
-          status: payload.status,
-          at: payload.at,
+          values: next,
+          status: readStatus(payload.status),
+          at: typeof payload.at === "number" ? payload.at : 0,
         });
 
         // Skip the first: everything differs from a blank baseline.

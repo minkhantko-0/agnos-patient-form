@@ -51,7 +51,11 @@ export function SessionCard({
             </span>
             <span>{percent}%</span>
           </div>
-          <Progress value={percent} className="h-1.5" />
+          <Progress
+            value={percent}
+            className="h-1.5"
+            aria-label={`${session.name}: ${percent}% complete`}
+          />
         </CardContent>
 
         <CardContent>

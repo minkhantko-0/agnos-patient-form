@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { TriangleAlertIcon } from "lucide-react";
@@ -27,6 +27,7 @@ import {
 } from "@/lib/patient/schema";
 import { useDraft } from "@/lib/patient/useDraft";
 import { usePatientPublisher } from "@/lib/realtime/usePatientPublisher";
+import { useTrailingThrottle } from "@/lib/realtime/useTrailingThrottle";
 
 import { FormField } from "./FormField";
 import { SubmittedPanel } from "./SubmittedPanel";
@@ -34,8 +35,11 @@ import { SubmittedPanel } from "./SubmittedPanel";
 const isFilled = (values: PatientFormValues) =>
   Object.values(values).some((value) => value.trim() !== "");
 
+/** A keystroke is not worth a JSON.stringify and a synchronous write. */
+const DRAFT_SAVE_MS = 500;
+
 export function PatientForm({ sessionId }: { sessionId: string }) {
-  const { connection, publish, seed, markSubmitted } =
+  const { connection, publish, seed, resume, markSubmitted } =
     usePatientPublisher(sessionId);
   const draft = useDraft(sessionId);
 
@@ -43,7 +47,11 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
   const [completed, setCompleted] = useState(0);
   const [hasContent, setHasContent] = useState(false);
   const restored = useRef(false);
+  const latest = useRef<PatientFormValues>(EMPTY_PATIENT);
   const { setGuarded } = useSessionGuard();
+
+  const saveDraft = useCallback(() => draft.save(latest.current), [draft]);
+  const draftWriter = useTrailingThrottle(DRAFT_SAVE_MS, saveDraft);
 
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
@@ -73,13 +81,26 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
   useEffect(() => {
     const subscription = watch((next) => {
       const values = next as PatientFormValues;
+      latest.current = values;
       publish(values);
-      draft.save(values);
+      draftWriter.schedule();
       setCompleted(countCompleted(values));
       setHasContent(isFilled(values));
     });
     return () => subscription.unsubscribe();
-  }, [watch, publish, draft]);
+  }, [watch, publish, draftWriter]);
+
+  // Throttling the draft means a write can still be pending when the tab goes
+  // away, and a reload runs no React cleanup — so flush on `pagehide` as well
+  // as on unmount, or the last few keystrokes never reach localStorage.
+  useEffect(() => {
+    const flush = () => draftWriter.flush();
+    window.addEventListener("pagehide", flush);
+    return () => {
+      window.removeEventListener("pagehide", flush);
+      flush();
+    };
+  }, [draftWriter]);
 
   // Submitted forms are guarded too: leaving takes a finished form off the
   // front desk's screen, which is worse than losing a half-typed one.
@@ -90,6 +111,7 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
 
   const onSubmit = (values: PatientFormValues) => {
     markSubmitted(values);
+    draftWriter.cancel();
     draft.save(values, true);
     setSubmitted(true);
   };
@@ -99,8 +121,11 @@ export function PatientForm({ sessionId }: { sessionId: string }) {
       <SubmittedPanel
         values={getValues()}
         onEdit={() => {
+          const values = getValues();
           setSubmitted(false);
-          draft.save(getValues(), false);
+          draftWriter.cancel();
+          draft.save(values, false);
+          resume(values);
         }}
       />
     );

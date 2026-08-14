@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/empty";
 import { Progress } from "@/components/ui/progress";
 import {
+  FIELD_META,
   FIELD_SECTIONS,
   REQUIRED_FIELDS,
   countCompleted,
@@ -59,8 +60,18 @@ export function SessionDetail({ sessionId }: { sessionId: string }) {
     : (presence?.completed ?? 0);
   const percent = Math.round((completed / REQUIRED_FIELDS.length) * 100);
 
+  // One region for the whole form. Thirteen live fields would queue an
+  // announcement each per keystroke burst and drown a screen reader out.
+  const announcement = [...monitor.changedFields]
+    .map((field) => FIELD_META[field].label)
+    .join(", ");
+
   return (
     <div className="space-y-6">
+      <div aria-live="polite" className="sr-only">
+        {announcement && `${announcement} updated`}
+      </div>
+
       <Button variant="ghost" size="sm" asChild>
         <Link href="/staff">
           <ArrowLeftIcon data-icon="inline-start" />
@@ -91,7 +102,11 @@ export function SessionDetail({ sessionId }: { sessionId: string }) {
                 : "No updates yet"}
             </span>
           </div>
-          <Progress value={percent} className="h-1.5" />
+          <Progress
+            value={percent}
+            className="h-1.5"
+            aria-label="Form completion"
+          />
         </CardContent>
       </Card>
 

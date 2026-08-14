@@ -19,6 +19,12 @@ export const EVENT = {
 export type StatePayload = {
   values: PatientFormValues;
   status: PatientStatus;
+  /**
+   * Identifies one mount of the patient tab. A refresh keeps the session id but
+   * restarts `revision` at 0, so without this the staff side would drop every
+   * payload until the patient had made as many edits again.
+   */
+  instance: string;
   /** Broadcast is unordered; the staff side drops anything it has passed. */
   revision: number;
   /** When the patient last changed something. 0 until they touch the form. */
