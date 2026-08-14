@@ -336,11 +336,6 @@ is the first thing to add — staff auth plus channel authorization policies —
 it is left out here because the brief asks for the realtime interface rather
 than an access-control model.
 
-**Email is optional.** The brief lists it without the "(optional)" marker it
-puts on middle name, emergency contact and religion, but the validation
-requirement says "email if applicable", so it is validated only once something
-is typed.
-
 **Drafts expire after 12 hours.** A patient's answers sit in `localStorage` on
 their own device so a refresh does not lose them. A waiting-room device is
 shared, so anything older than a visit is dropped on sight rather than kept

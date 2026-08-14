@@ -66,8 +66,9 @@ export const patientSchema = z.object({
   email: z
     .string()
     .trim()
+    .min(1, "Email is required")
     .refine(
-      (value) => value === "" || z.email().safeParse(value).success,
+      (value) => z.email().safeParse(value).success,
       "Enter a valid email address",
     ),
 
@@ -136,7 +137,6 @@ export const FIELD_META = {
   },
   email: {
     label: "Email",
-    optional: true,
     placeholder: "name@example.com",
     input: { kind: "text", type: "email", autoComplete: "email" },
   },
